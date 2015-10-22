@@ -405,7 +405,8 @@ bool CGenotype::AllowMutation()
 	return true;
 }
 
-char CGenotype::SelectMutation()
+char CGenotype::SelectMutation() 
+// Not currently in service: intended to select based on transition/transversion rates
 {
 	return 'c';
 }

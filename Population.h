@@ -119,6 +119,7 @@ public:
 	bool ReplicateOnce();
 	void Replicate();                  // Constructs a Pool object and invokes replication cycle
 
+	bool OddsAreInFavor(CGenotype* pGenotype);  // Determines liklihood of replication based on fitness
 	void MutateGenotypes(vector<CGenotype*> &vGenotypeSet); // Performs genotype mutation
 	CGenotype* CombineGenotypes(CGenotype* pGenotype_a, CGenotype* pGenotype_b); // Performs copy-choice replication
 	CGenotype* SelectGenotype(int iRandomPosition);

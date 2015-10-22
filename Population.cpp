@@ -249,6 +249,25 @@ double CPopulation::CalculatePopulationFitness()
 	return dAverageFitness;
 }
 
+bool CPopulation::OddsAreInFavor(CGenotype* pGenotype)
+{
+	int iMAX_RANDOM = 8;  // Set to positive integer
+	bool bOdds = 1;
+	double dAverageFitness = CalculatePopulationFitness();
+	double dFitness = pGenotype->CalculateFitness();
+
+	// Calculate odds using simple formula: step-linear relationship based on pop average
+	int iRandomNum = GetRandomNum(0, iMAX_RANDOM-1);
+	double dFitnessFactor = 2.0 * dAverageFitness * ((double)iRandomNum / (double)iMAX_RANDOM);
+
+	if(dFitnessFactor < dAverageFitness)
+	{
+		bOdds = 0; 
+	}
+
+	return bOdds;
+}
+
 void CPopulation::UpdatePopulationStatistics()
 {
 	// First, update statistics for each genotype in this population
@@ -453,7 +472,7 @@ void CPopulation::MutateGenotypes(vector<CGenotype*> &vGenotypeSet)
 
 	int iGenotypeLength = vGenotypeSet[0]->m_vPositionSet.size();
 	int iNumOfPositions = iNumOfGenotypes * iGenotypeLength;
-	int iNumOfMutations = (int)((double)iNumOfPositions * dERROR_RATE); // ***check rounding; calc is naive: ok if iNumOfMutations is large (as in a sim)
+	int iNumOfMutations = (int)((double)iNumOfPositions * dERROR_RATE); // ***check rounding; calc is naive: ok if iNumOfMutations is large (as in a simulation)
 	set<int> MutatedPositionSet;
 
 	for(int i = 0; i < iNumOfMutations; i++)
@@ -472,7 +491,7 @@ void CPopulation::MutateGenotypes(vector<CGenotype*> &vGenotypeSet)
 		CGenotype* pGenotype = vGenotypeSet[iGenotypeSetIndex];
 		CPosition* pPosition = pGenotype->m_vPositionSet[iGenotypeOffset];
 		pPosition->Mutate();
-		//pGenotype->UpdateGenotypeStatistics();
+		//pGenotype->UpdateGenotypeStatistics(); //Note: update when essential; updating now costs time
 	}
 }
 
@@ -552,6 +571,7 @@ bool CPopulation::ReplicateOnce()
 	
 	++m_iGenerationNum;  // Increment generation number, even if no replication
 
+	// LimitingFactor is a measure of remaining resources
 	double dLimitingFactor = (double)(iBURST_SIZE - m_iNumOfGenotypes) / (iBURST_SIZE);
 	int iNumOfNewGenotypes = (int)((double)m_iNumOfGenotypes * iGENERATIONAL_GROWTH * dLimitingFactor); 
 
@@ -566,6 +586,11 @@ bool CPopulation::ReplicateOnce()
 	int iNumOfReplicates = iNumOfNewGenotypes - iNumOfRecombinants;
 
 	vector<CGenotype*> vNewGenotypeSet; // Holds new genotypes, formed via replication or recombination
+
+	// *** To implement fitness, determine odds of successful replication based on fitness 
+	// Then, replicate yes/no based on random event: higher fittness increases odds 
+	// And keep track of how many new genotypes were actually replicated
+	int iNewGenotypesReplicated = 0;
 
 	// For recombinants, simulate copy choice mechanism of replication
 	for(int i = 0; i < iNumOfRecombinants; i++) //
@@ -584,7 +609,11 @@ bool CPopulation::ReplicateOnce()
 
 		// Combine the 2 genotypes using copy-choice mechanism
 		CGenotype* pNewGenotype = CombineGenotypes(pGenotype_a, pGenotype_b); // Creates a new genotype
-		vNewGenotypeSet.push_back(pNewGenotype); // Add this new genotype to holding array
+		if(OddsAreInFavor(pNewGenotype)) // Based on fitness
+                {
+			vNewGenotypeSet.push_back(pNewGenotype); // Add this new genotype to holding array
+			iNewGenotypesReplicated++;
+		}
 	}
 
 	// For replicates, it's simpler
@@ -592,7 +621,11 @@ bool CPopulation::ReplicateOnce()
 	{
 		int iGenotype = GetRandomNum(0, m_iNumOfGenotypes-1);
 		CGenotype* pNewGenotype = new CGenotype(SelectGenotype(iGenotype),false); // create a new genotype
-		vNewGenotypeSet.push_back(pNewGenotype); // Add to new genotype list
+                if(OddsAreInFavor(pNewGenotype)) // Based on fitness
+		{
+			vNewGenotypeSet.push_back(pNewGenotype); // Add to new genotype list (holding array)
+			iNewGenotypesReplicated++;
+		}
 	}
 	for(int j = 0; j < vNewGenotypeSet.size(); j++)
 		vNewGenotypeSet[j]->PrintGenotype();
@@ -612,7 +645,8 @@ bool CPopulation::ReplicateOnce()
 	vNewGenotypeSet.clear();  // Clean up
 
 	// Total genotype count is increased by no. of newly replicated ones.	
-	m_iNumOfGenotypes += iNumOfNewGenotypes; 
+	//m_iNumOfGenotypes += iNumOfNewGenotypes; 
+	m_iNumOfGenotypes += iNewGenotypesReplicated; 
 	return true;
 }
 

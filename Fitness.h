@@ -75,7 +75,7 @@ class CFitness {
 public:
 	CFitness();
 	CFitness(SFitness fitnesses[], int iNumPositions);
-	//CFitness(CFitness* pFitness);
+	CFitness(CFitness* pFitness);
 	~CFitness();
 	double GetMaxValue(SFitness* pSFitness);
 	void CalculateMaxFitness();
