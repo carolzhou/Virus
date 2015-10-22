@@ -177,9 +177,9 @@ void Simulate(void)
 		pFoobar3->m_iGenotypeCount = iFOOBAR3_COUNT;
 	
 		pInoculum->AddGenotype(pSabin);  	
-		//pInoculum->AddGenotype(pFoobar1);  	
-		//pInoculum->AddGenotype(pFoobar2);  	
-		//pInoculum->AddGenotype(pFoobar3);  	
+		pInoculum->AddGenotype(pFoobar1);  	
+		pInoculum->AddGenotype(pFoobar2);  	
+		pInoculum->AddGenotype(pFoobar3);  	
 	
 		// Each population (cell model) receives this inoculum	
 		pCurCloud->AddPopulation(pInoculum); // Add inoculum (population object) to cloud
@@ -302,10 +302,10 @@ int main(int argc, char* argv[])
 	delete pSabin1;
 	delete pMahoney;
 	delete pNeurovirulent;
-	delete pSabin;
-	delete pFoobar1;
-	delete pFoobar2;
-	delete pFoobar3;
+	//delete pSabin;
+	//delete pFoobar1;
+	//delete pFoobar2;
+	//delete pFoobar3;
 	delete pFitness;
 	
 	return 0;
