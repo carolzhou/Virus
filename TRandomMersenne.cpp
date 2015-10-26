@@ -1,11 +1,22 @@
 /*
  * MersenneRandomNumbers.cpp
  *
- *  Adapted on: May 18, 2009, for use in Qspp
- *      by Carol L. Ecale Zhou
+ *  Created on: May 18, 2009
+ *      Author: zhou4
  *
+ *  Description: This code was taken from Tanya's development (copied from the CD).  Note: Tanya had no corresponding .h file.
  */
 
+//#include "MersenneRandomNumbers.h"
+
+//MersenneRandomNumbers::MersenneRandomNumbers() {
+	// TODO Auto-generated constructor stub
+
+//}
+
+//MersenneRandomNumbers::~MersenneRandomNumbers() {
+	// TODO Auto-generated destructor stub
+//}
 /************************** MERSENNE.CPP ******************** AgF 2001-10-18 *
 *  Random Number generator 'Mersenne Twister'                                *
 *                                                                            *

@@ -1,9 +1,11 @@
 /*
  * RandomC.h
  *
- *  Adapted on: May 18, 2009, for use in Qspp
- *      by Carol L. Ecale Zhou
+ *  Created on: May 18, 2009
+ *      Author: zhou4
  *
+ *  Description:  This code was taken from Tanya's development of the incell model (copied from the CD). Note:  Tanya
+ *      had no corresponding .cpp file
  *
  */
 
