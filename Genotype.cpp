@@ -18,6 +18,8 @@
 //#define PRINT_GENOTYPE 
 //#define PRINT_GENOTYPE_IN_DETAIL
 
+extern int iMAHONEY_THRESHOLD;
+
 using namespace std;
 
 CGenotype::CGenotype(int iGenotypeCount)
@@ -308,6 +310,7 @@ bool CGenotype::IsMahoney()
 {
 	int iMahoneyCount = 0;  // Number of positions that have reverted to Mahoney
 	bool bMahoney = false;  // Assume false to start
+    int iMahoneyPercent = 0; // What percentage of positions are Mahoney
 	std::vector<CPosition*>::iterator it;
 	CPosition* nextPosition = NULL;
 
@@ -323,7 +326,8 @@ bool CGenotype::IsMahoney()
 		else
 			nextPosition->m_bMahoney = false;
 	}
-	if(iMahoneyCount >= 54) // CHECK: should not hard code here
+    iMahoneyPercent = (int)((100 * iMahoneyCount) / 54);
+	if(iMahoneyCount >= iMAHONEY_THRESHOLD) //
 		bMahoney = true;
 
 	m_bMahoney = bMahoney;  // Update at genotype level

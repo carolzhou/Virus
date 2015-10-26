@@ -64,7 +64,7 @@ bool          bREMOVE_LETHALS = FALSE;
 // Initialize according to defaults listed in Configurable.h 
 // And modifiable by user at command line
 double        dERROR_RATE                    = ERROR_RATE;
-double        iGENERATIONAL_GROWTH           = GENERATIONAL_GROWTH;
+double        dGENERATIONAL_GROWTH           = GENERATIONAL_GROWTH;
 double        dHOMOLOGOUS_RECOMBINATION_RATE = HOMOLOGOUS_RECOMBINATION_RATE;
 unsigned long iBURST_SIZE                    = BURST_SIZE;
 unsigned long iMULTIPLICITY_OF_INFECTION     = MULTIPLICITY_OF_INFECTION;
@@ -72,6 +72,8 @@ unsigned long iNUMBER_OF_PASSAGES            = NUMBER_OF_PASSAGES;
 unsigned long iNUM_GENS_TO_CONSOLIDATE       = NUM_GENS_TO_CONSOLIDATE;
 unsigned long iNUMBER_OF_POPULATIONS         = NUMBER_OF_POPULATIONS;
 double        dFITNESS_ACCELERATOR           = FITNESS_ACCELERATOR;
+int           iMAHONEY_THRESHOLD             = MAHONEY_THRESHOLD;
+bool          bRETAIN_LETHALS                = true;
 
 // Not yet in service
 unsigned long iGENERATION_DEPTH              = GENERATION_DEPTH;
@@ -151,7 +153,7 @@ void Simulate(void)
 			delete pPrevCloud;
 		}
 		cout << endl << "********** Passage " << i << " Inoculum **********" << endl;
-		pCurCloud->PrintCloud();
+		//pCurCloud->PrintCloud();
 
 		cout << "Growing..." << endl;
 		pCurCloud->Grow();
@@ -178,7 +180,7 @@ int main(int argc, char* argv[])
 		if(!strcmp(argv[i],"-e"))
 			dERROR_RATE = atof(argv[i+1]);
 		else if(!strcmp(argv[i],"-g"))
-			iGENERATIONAL_GROWTH = atof(argv[i+1]);
+			dGENERATIONAL_GROWTH = atof(argv[i+1]);
 		else if(!strcmp(argv[i],"-r"))
 			dHOMOLOGOUS_RECOMBINATION_RATE = atof(argv[i+1]);
 		else if(!strcmp(argv[i],"-b"))
@@ -193,15 +195,22 @@ int main(int argc, char* argv[])
 			iNUMBER_OF_POPULATIONS = ((unsigned)atol(argv[i+1]));
 		else if(!strcmp(argv[i],"-a"))
 			dFITNESS_ACCELERATOR = ((double)atof(argv[i+1]));
+        else if(!strcmp(argv[i],"-t"))
+            iMAHONEY_THRESHOLD = ((int)atoi(argv[i+1]));
+        else if(!strcmp(argv[i],"-l"))
+            bRETAIN_LETHALS = ((bool)atoi(argv[i+1]));
 	}
 	cout << "Error rate = " << dERROR_RATE << endl;
-	cout << "Generational growth rate = " << iGENERATIONAL_GROWTH << endl;
+	cout << "Generational growth rate = " << dGENERATIONAL_GROWTH << endl;
 	cout << "Homologous recombination rate = " << dHOMOLOGOUS_RECOMBINATION_RATE << endl;
 	cout << "Burst size = " << iBURST_SIZE << endl;
 	cout << "Multiplicity of infection = " << iMULTIPLICITY_OF_INFECTION << endl;
 	cout << "Number of passages = " << iNUMBER_OF_PASSAGES << endl;
 	cout << "Number of generations to consolidate = " << iNUM_GENS_TO_CONSOLIDATE << endl;
 	cout << "Number of populations = " << iNUMBER_OF_POPULATIONS << endl;
+    cout << "Fitness accelerator = " << dFITNESS_ACCELERATOR << endl;
+    cout << "Mahoney threshold (%) = " << iMAHONEY_THRESHOLD << endl;
+    cout << "Retain lethals is " << (bRETAIN_LETHALS ? "true" : "false") << endl;
 
 	cout << endl << "Creating initial genotypes..." << endl;
 	

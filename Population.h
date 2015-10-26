@@ -93,6 +93,8 @@ public:
 	void MutateGenotypes(vector<CGenotype*> &vGenotypeSet); // Performs genotype mutation
 	CGenotype* CombineGenotypes(CGenotype* pGenotype_a, CGenotype* pGenotype_b); // Performs copy-choice replication
 	CGenotype* SelectGenotype(int iRandomPosition);
+    double CalculateAverageFitness(vector<CGenotype*> &vGenotypeSet); // Calculate the average fitness over a genotype set
+    int CalculateNumOfProgeny(double dFitness, vector<CGenotype*> &vGenotypeSet);  // Calculate number of progeny for a genoytpe
 
 	// data members
 	vector<CGenotype*> m_vGenotypeSet;
@@ -107,8 +109,8 @@ public:
 	double             m_dMahoneyReversionIndex;   // Measure of the degree to which the population has reverted to Mahoney genotype
 	unsigned long      m_iNumOfDefectiveGenotypes; // Sum of genotypes with a lethal mutation
 	double             m_dAverageFitness;          // Average fitness value over member genotypes
-	bool		   m_bMahoney;                 // True if any genotype resembled Mahoney in sequence
-	bool		   m_bNeurovirulent;           // True if any genotype is neurovirulent
+	bool		       m_bMahoney;                 // True if any genotype resembled Mahoney in sequence
+	bool               m_bNeurovirulent;           // True if any genotype is neurovirulent
 	bool               m_bExtinct;                 // True if no viable genotypes remain
 	unsigned long      m_iGenotypeMaxCount;        // Number of genotypes (total, including defective/lethal) reached
 };

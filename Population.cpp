@@ -14,6 +14,7 @@
 #include <iostream>
 #include <set>
 #include <time.h>
+#include <math.h>
 #include "Population.h"
 
 // Conditional compilation
@@ -23,15 +24,17 @@
 //#define PRINT_GENOTYPES
 //#define PRINT_DETAIL
 #define BRIEF_REPORT
+//#define LONG_REPORT
 
 using namespace std;
 
-extern double        iGENERATIONAL_GROWTH;
+extern double        dGENERATIONAL_GROWTH;
 extern unsigned long iBURST_SIZE;
 extern double        dERROR_RATE;
 extern double        dHOMOLOGOUS_RECOMBINATION_RATE;
 extern unsigned long iNUM_GENS_TO_CONSOLIDATE;
-extern bool          bREMOVE_LETHALS;
+//extern bool          bREMOVE_LETHALS;
+extern bool          bRETAIN_LETHALS;
 extern double        dFITNESS_ACCELERATOR;
 
 static TRandomMersenne oRandomNumGenerator(10);
@@ -227,6 +230,54 @@ double CPopulation::CalculatePopulationFitness()
 	return dAverageFitness;
 }
 
+double CPopulation::CalculateAverageFitness(vector<CGenotype*> &vGenotypeSet)
+{
+    double dAveFitness = 0.0;
+    double dFitnessSum = 0.0;
+    
+    if (vGenotypeSet.size() > 0)
+    {
+        for(unsigned int i = 0; i < vGenotypeSet.size(); i++)
+        {
+            vGenotypeSet[i]->CalculateFitness();
+            dFitnessSum += vGenotypeSet[i]->m_dFitness;
+        }
+        dAveFitness = dFitnessSum / vGenotypeSet.size();
+    }
+    
+    return dAveFitness;
+}
+
+int CPopulation::CalculateNumOfProgeny(double dGenotypeFitness, vector<CGenotype*> &vGenotypeSet)
+// For a given fitness value (for a certain genotype), calculate how many progeny it will generate
+// Calculation of a genotype's contribution to the next generation depends on the genotype's
+// fitness, the number of progeny to be produced by the current replicating set, the magnitude of the
+// fitness accelerator (-a input parameter). The formulat is based on a geometric progression
+// whereby the number of progeny increases geometrically based on the genotype fitness. The formula
+// is:  Pi = (int) [ P * f^k / SUMi=1..n(fi^k)]
+// Translated into English: the current genotype's number of progeny is the integer value of
+// the total number of progeny time the ratio of the current genotype's fitness factor divided by
+// the sum of the fitness factors for the replicating genotypes.  The fitness factor is calculated
+// by raising the genotype's fitness value to the power iFITNESS_ACCELERATOR.
+{
+    int iProgenyCount = 1;
+    int iTotalProgeny = vGenotypeSet.size(); // For now, is always = number of replicating genotypes
+    double dFitnessFactorSum = 0.0;
+    
+    // First, calculate the sum of fitness factors over the genotype set
+    for(unsigned int i = 0; i < vGenotypeSet.size(); i++)
+    {
+        dFitnessFactorSum += pow(vGenotypeSet[i]->m_dFitness, dFITNESS_ACCELERATOR);
+    }
+    
+    // Next, calculate number of progeny for given genotype
+    if (dFitnessFactorSum > 0.0)
+    {
+        iProgenyCount = (int)(iTotalProgeny * pow(dGenotypeFitness,dFITNESS_ACCELERATOR) / dFitnessFactorSum);
+    }
+    return iProgenyCount;
+}
+
 void CPopulation::UpdatePopulationStatistics()
 {
 	// First, update statistics for each genotype in this population
@@ -264,17 +315,18 @@ int CPopulation::ReportPopulationStatistics()
 		dAveNeurovirulentIndex = (double)m_iNeurovirulentIndex / (double)m_iNumOfNeurovirulentGenotypes;
 	}
 	int iDistinctCount = m_vGenotypeSet.size();
+    double dDiversity = (double)iDistinctCount / (double)m_iNumOfGenotypes; //*** CHECK: do this better via Hamming distance
 
 	cout << "Population Statistics: " << endl;
 
 #ifdef BRIEF_REPORT
-	cout << "Pstats: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << endl;
-	cout << "Ngia: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << ' ' << endl;
-	cout << "Mgpr: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << ' ' << endl;
+	cout << "Pgud: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << dDiversity << endl;
+	cout << "Ngmi: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << ' ' << endl;
+	cout << "Mgmr: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << ' ' << endl;
 	cout << "DFV: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << ' ';  
 	cout << endl;
-	return(0);
 #endif
+#ifdef LONG_REPORT
 	cout << "Absolute number of genotypes in this population: " << m_iNumOfGenotypes << endl;
 	cout << "Number of distinct genotypes: " << iDistinctCount << endl;
 	cout << "Max genotype count " << m_iGenotypeMaxCount << endl;;
@@ -283,11 +335,14 @@ int CPopulation::ReportPopulationStatistics()
 	cout << "Average neurovirulence: " << dAveNeurovirulentIndex << endl;
 	cout << "Number of Mahoney genotypes: " << m_iNumOfMahoneyGenotypes << endl;
 	cout << "Number of Mahoney mutations in population: " << m_iNumOfMahoneyPositions << endl;
+    cout << "Number of genotypes that have reached " << iMAHONEY_THRESHOLD << " Mahoney status: " << cout << dMahoneyReversionIndex << cout << endl;
 	cout << "Mahoney reversion index: " << m_dMahoneyReversionIndex << endl;
 	cout << "Number of defective genotypes: " << m_iNumOfDefectiveGenotypes << endl;
+    cout << "Estimate of population diversity: " << dDiversity << endl;
 	cout << "Average genotype fitness over population: " << m_dAverageFitness << endl;
 	cout << "This population is " << (m_bExtinct ? "EXTINCT" : "Viable") << endl;
 	cout << endl;
+#endif
 	return(0);
 }
 
@@ -296,7 +351,7 @@ void CPopulation::Consolidate(void) // Remove redundancy in genotype list; colla
 // Each genotype object is moved to a holding list.  Then,
 // it is compared to all remaining genotypes to determine if redundancy can be collapsed,
 // which is accomplished by summing the counts between the two genotype objects.
-// Also, genotypes with a lethal (fitness = 0.0) mutation are removed. 
+// Also, genotypes with a lethal (fitness = 0.0) mutation may be removed.
 { 
 	if(m_vGenotypeSet.size() == 0)  // If population has no genotypes, then it's extinct
 	{
@@ -341,6 +396,7 @@ void CPopulation::Consolidate(void) // Remove redundancy in genotype list; colla
 		}
 	}
 
+    
 	// vNewGenotypeSet now holds consolidated genotypes, and m_vGenotypeSet holds NULL pointers
 	m_vGenotypeSet.clear();
 	
@@ -351,9 +407,9 @@ void CPopulation::Consolidate(void) // Remove redundancy in genotype list; colla
 		{
 			cout << "WARNING: vNewGenotypeSet[i] is NULL for i = " << i << endl;
 		}
-		else // Retain genotype as long as it does not have a lethal mutation
+		else // If genotype is lethal (is a defective interfering particle), retain depending on bool
 		{
-			if(vNewGenotypeSet[i]->IsLethal() && bREMOVE_LETHALS)  
+			if(vNewGenotypeSet[i]->IsLethal() && !RETAIN_LETHALS)
 			//if(vNewGenotypeSet[i]->IsLethal())  
 			{
 #ifdef PRINT_DETAIL
@@ -526,14 +582,14 @@ void CPopulation::Replicate()
 			if((m_iGenerationNum % iNUM_GENS_TO_CONSOLIDATE) == 0)
 			{
 				cout << "Consolidating at iNUM_GENS_TO_CONSOLIDATE" << endl;
-				bREMOVE_LETHALS = FALSE; // Be sure not to remove lethals just yet
+				//bREMOVE_LETHALS = FALSE; // Be sure not to remove lethals just yet
 				Consolidate();
 			}
 		}
 		cout << "Performing final consolidation..." << endl;
-		bREMOVE_LETHALS = TRUE;  // Remove lethals after all replication is done
+		//bREMOVE_LETHALS = TRUE;  // Remove lethals after all replication is done
 		Consolidate();
-		bREMOVE_LETHALS = FALSE;  // reset as default
+		//bREMOVE_LETHALS = FALSE;  // reset as default
 	}
 	else
 	{
@@ -552,7 +608,7 @@ bool CPopulation::ReplicateOnce()
 	++m_iGenerationNum;  // Increment generation number, even if no replication
 
 	double dLimitingFactor = (double)(iBURST_SIZE - m_iNumOfGenotypes) / (iBURST_SIZE);
-	int iNumOfNewGenotypes = (int)((double)m_iNumOfGenotypes * iGENERATIONAL_GROWTH * dLimitingFactor); 
+	int iNumOfNewGenotypes = (int)((double)m_iNumOfGenotypes * dGENERATIONAL_GROWTH * dLimitingFactor);
 
 	if(iNumOfNewGenotypes == 0)  // Nothing to replicate
 	{
@@ -597,8 +653,10 @@ bool CPopulation::ReplicateOnce()
 		vNewGenotypeSet[j]->PrintGenotype();
 
 	// Apply random mutation to the new genotypes  
-	MutateGenotypes(vNewGenotypeSet); 
+	MutateGenotypes(vNewGenotypeSet);
 
+    int iNewGenotypeCount = 0;  // Count of how many new genotype are actually added to population
+    
 	// Update attributes of new genotypes and move them to m_vGenotypeSet
 	CGenotype* pGenotype;
 	for(unsigned int i = 0; i < vNewGenotypeSet.size(); i++)
@@ -606,12 +664,28 @@ bool CPopulation::ReplicateOnce()
 		pGenotype = vNewGenotypeSet[i];
 		pGenotype->m_bNewRecombinant = false;
 		pGenotype->m_bMutatedReplicate = false;
-		m_vGenotypeSet.push_back(pGenotype); // A new object is added
-	}
+        
+        // Calculate how many of this genotype to produce based on fitness
+        // Note:  normally number of progeny = number of replicating genotypes, but code accommodates more progeny
+        // And...Not every genotype can become a parent--survival of the fittest!
+        int iProgenyCount = CalculateNumOfProgeny(pGenotype->m_dFitness, vNewGenotypeSet);
+        
+        if (iProgenyCount > 0)
+        {
+            pGenotype->m_iGenotypeCount += iProgenyCount;
+            m_vGenotypeSet.push_back(pGenotype); // A new object is added
+            iNewGenotypeCount += iProgenyCount;
+        }
+        else
+        {
+            delete pGenotype;
+        }
+    }
 	vNewGenotypeSet.clear();  // Clean up
 
 	// Total genotype count is increased by no. of newly replicated ones.	
-	m_iNumOfGenotypes += iNumOfNewGenotypes; 
-	return true;
+	//m_iNumOfGenotypes += iNumOfNewGenotypes;
+    m_iNumOfGenotypes += iNewGenotypeCount;
+    return true;
 }
 
