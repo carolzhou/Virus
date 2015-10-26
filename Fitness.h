@@ -11,8 +11,11 @@
  * a list of positions and fitness values for each nucleotide at that position.
  *
  * Programmer's notes:
- *
  */
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
+
 
 #ifndef FITNESS_H
 #define FITNESS_H

@@ -6,6 +6,10 @@
  *      Author: Carol Zhou
  */
 
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
+
 #include <iostream>
 #include <typeinfo>
 #include "Genotype.h"

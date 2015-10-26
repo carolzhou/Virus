@@ -12,6 +12,10 @@
  * The degreeOfNeurovirulence corresponds to "none" = 0, "low" = 1, "moderate" = 2, "strong" = 3.
  */
 
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
+
 #ifndef POSITION_H_
 #define POSITION_H_
 

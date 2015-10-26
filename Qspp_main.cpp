@@ -2,15 +2,16 @@
 // Name        : Qspp_main.cpp
 // Author      : Carol L. Ecale Zhou
 // Original    : May 2009
-// Current     : 25 March 2015
-// Version     : 1.1
-// Copyright   : copyright notice goes here
+// Current     : 26 October 2015
+// Version     : 1.2
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
 //
 // Description : 
 //    Qspp is an agent-based stochastic simulation model. Being a simplified
 //    version of an original model plan, it contains only 3 agents:  genotypes,
 //    populations, and the quasispecies cloud. This model could be expanded to a
-//    full-scale, agent-based in-cell/cell-to-cell model. I am calling this a 
+//    full-scale, parallel in-cell/cell-to-cell model. I am calling this a
 //    "transition model", as it models the Sabin to Mahoney genetic transition.
 //    Sabin is an attenuated strain of poliovirus that was the basis for the
 //    original polio vaccine. It is non-virulent, although it has potential to
@@ -31,48 +32,13 @@
 //       Version 1 of this model is designed to simulate the transition from Sabin
 //    to Mahoney. Thus, the Sabin genotype comprises the initial inoculum.
 //    Nucleotide positions that match neurovirulence (from the literature)
-//    are enumerated in FixedPosition.h. This current version, 1.1, 
-//    is unconstrained, meaning that there are no data that determine when a random
-//    mutation is lethal vs. neutral vs. beneficial. Therefore, the quasispecies cloud
-//    continues to diversify as replication and passaging proceeds.
+//    are enumerated in FixedPosition.h. This current version, 1.2, implements
+//    fitness, which is defined according to the neurovirulent Mahoney genotype.
 //       The overall purpose of this model is to simulate the Sabin-to-Mahoney
 //    transition and to study the genetic mechanisms that drive this transition.
 //    This model can be used as a teaching tool for better understanding the
 //    potential impact of changes in the frequencies of these known genetic
 //    mechanisms.
-//
-// Programmer's notes:
-// 1) 24 Feb 2015:  Version 1.0 of this code was submitted for code release. 
-//    This version 1.1 code needs to be tested thoroughly and constraints
-//    need to be added. 
-// 2) Version 1 runs in serial; modify to run in parallel for version 2.
-// 3) Need to code CGenotype::AllowMutation() and ::SelectMutation(), but also need
-//    data to support a realistic FixFactor for each Mahoney position.
-// 4) *** Next:  review CCloud::Burst() - check that all pop data gets into the new
-//    super population, and memeory is cleaned up.
-// 5) A new class has been written to accommodate fitness. For now, maximum fitness
-//    is defined as Mahoney or Neurovirulence. Fitness values are computed for each genotype.
-//    Lethal mutations can be designated by assigning a positional fitness value of 0.0.
-//
-// Testing - Input Parameters:
-// *  Setting -P (number of populations) > 1 causes code to fail in first similation. I
-//    believe this is because I need to 'new' the inoculum for each next population, and
-//    then the inoculum pool (e.g., pSabin) does need to be deleted at the end. 
-// *  Setting -i (MOI) greater than genotype count at end of previous cycle causes code to hang,
-//    though in reality this is unrealistic.
-// *  Setting -r (recombination rate) to negative causes more genotypes to be generated
-//    than burst size should allow.  Unrealistic, but is this behavior expected?
-// *  Setting -g (generational growth) > 1 causes final genotype count to slightly exceed
-//    what burst size should allow. In reality, generational growth should be < 1. 
-// Testing - Code Behavior:
-// *  On rare occasions the code bombs--I wonder if random number generation might
-//    be producing zero, causing a numeric (eg divide-by-zero) problem somewhere. This
-//    error is hard to re-produce by hand.
-// Testing - Other:
-// *  Scrutinize code that is marked at CHECK
-// *  Scrutinize all push_back operations; beware that vector element re-allocation may bite
-//    http://codeguru.com/cpp/cpp/cpp_mfc/stl/article.pfp/c4027/C-Tutorial-A-Beginners-Guide-to-stdvector-Part-1.htm
-// *  Need to swap emptied vector with null vector to dump memory:  see miniProg.cpp
 //
 //============================================================================
 
@@ -225,7 +191,7 @@ int main(int argc, char* argv[])
 			iNUM_GENS_TO_CONSOLIDATE = ((unsigned)atol(argv[i+1]));
 		else if(!strcmp(argv[i],"-P"))
 			iNUMBER_OF_POPULATIONS = ((unsigned)atol(argv[i+1]));
-		else if(!strcmp(argv[i],"-k"))
+		else if(!strcmp(argv[i],"-a"))
 			dFITNESS_ACCELERATOR = ((double)atof(argv[i+1]));
 	}
 	cout << "Error rate = " << dERROR_RATE << endl;

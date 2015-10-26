@@ -5,6 +5,8 @@
  *  Last update: 25 March 2015
  *      Author: Carol L. Ecale Zhou 
  */
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
 
 #include <ctime>
 #include <iostream>

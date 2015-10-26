@@ -7,6 +7,9 @@
  *  This file contains fixed genome states.
  */
 
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
 // Position and nucleotide values are taken from Georgescu et al. 1997, JVirology 71:7758.
 // Sabin 1
 

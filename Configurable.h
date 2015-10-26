@@ -3,6 +3,7 @@
  *
  *  Created on: May 27, 2009
  *      Author: Carol Zhou
+ *  Most recent update:  26 October 2015
  *
  *  This file contains configurable constants. Some of these should be changed from constants to variable,
  *  which may be later modified dynamically or specifically by underlying objects that use them.
@@ -10,6 +11,9 @@
  *  This website has some quick facts:
  *  http://www.brown.edu/Courses/Bio_160/Projects2000/Polio/PoliovirusLifeCycle.htm
  */
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
 
 #ifndef CONFIGURABLE_H_
 #define CONFIGURABLE_H_
@@ -28,7 +32,7 @@
 						          // Adjust this to balance execution speed with memory usage
 #define NUMBER_OF_POPULATIONS         1    // -P / 100000 // realistic would be up to 1 million cells (populations) on a plate
                                                           // Increasing this well beyond 1 will require parallel computing.
-#define FITNESS_ACCELERATOR           2.0  // -k / 2.0    // Increases replication as fitness increases; turn fitness off when k=1.0
+#define FITNESS_ACCELERATOR           2.0  // -a / 2.0    // Increases replication as fitness increases; fitness effect is linear when k=1.0, off when k=0.0
 
 // Additional Parameter Defaults - ***Not yet in service
 // PARAMETER default value // command-line parameter / suggested value // explanation

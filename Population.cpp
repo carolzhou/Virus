@@ -2,10 +2,14 @@
  * Population.cpp
  *
  *  Created on: May 7, 2009
- *  Last update: 16 April 2015
+ *  Last update: 26 October 2015
  *      Author: Carol L. Ecale Zhou
  *
  */
+
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
 
 #include <iostream>
 #include <set>
@@ -28,6 +32,7 @@ extern double        dERROR_RATE;
 extern double        dHOMOLOGOUS_RECOMBINATION_RATE;
 extern unsigned long iNUM_GENS_TO_CONSOLIDATE;
 extern bool          bREMOVE_LETHALS;
+extern double        dFITNESS_ACCELERATOR;
 
 static TRandomMersenne oRandomNumGenerator(10);
 static unsigned long   iRandomNumGen = 0;

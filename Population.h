@@ -2,7 +2,7 @@
  * Population.h
  *
  *  Created on: May 7, 2009
- *  Last update: 25 March 2015
+ *  Last update: 26 October 2015
  *      Author: Carol L. Ecale Zhou
  *
  *  Description:  The Population class is the focus of cellular genome replication. It is managed by class Cloud.
@@ -32,26 +32,33 @@
  *  1) Determine census; use generationalGrowth to calculate how many genotypes to replicate; randomly select them
  *     and place them in the genotype replication pool. Recall that a genotype has a field designating the number
  *     of identical genotypes. Only one of these (usually) will be selected for replication.
- *  2) Use mutation rate to determine how many nts will mutate in the pool (that is, in nts we care about).
- *  3) Use recombination rate to determine how many replicating genotypes will recombine; randomly formulate pairs.
- *  4) For each pair, randomly determine a "crossover point" and assign pairs as "a" and "b".
- *  5) To compensate for each homologous recombination event, add a randomly selected genotype to the replication
+ *  2) Determine fitness of a replicating genotype, and calculate the proportion of new genotypes that the current
+ *     genotype will produce, based on its relative fitness.
+ *  3) Use mutation rate to determine how many nts will mutate in the pool (that is, in nts we care about).
+ *  4) Use recombination rate to determine how many replicating genotypes will recombine; randomly formulate pairs.
+ *  5) For each pair, randomly determine a "crossover point" and assign pairs as "a" and "b".
+ *  6) To compensate for each homologous recombination event, add a randomly selected genotype to the replication
  *     pool (since the recombination event (template jump) will essentially eliminate one genome's worth of
  *     progeny strand synthesis).
- *  6) Using the calculated number of nt mutations in this replication cycle, randomly distribute those mutations
+ *  7) Using the calculated number of nt mutations in this replication cycle, randomly distribute those mutations
  *     among the "available" template nucleotide positions: that is, all non-recombining genotypes plus the
  *     "a" genotypes up to the crossover point, and the "b" genotypes beyond the crossover point. (In an advanced
  *     version of the model, this would be the point at which the "mutation hotspot" factor would be invoked to
  *     bias mutations toward certain residues or regions of the genome. However, we must assume that replicational
  *     mutations are entirely random--the bias is really at the level of fitness/selection, although this could
  *     reasonably be modeled/simulated at the replication level so as to keep the model simple.)
- *  7) For each genotype in the pool, construct a Mutation object, which specifies the position(s) at which a
+ *  8) For each genotype in the pool, construct a Mutation object, which specifies the position(s) at which a
  *     mutation is to occur, and link the Mutation object to its genotype.
- *  8) Invoke the Replication object, passing to it the genotype replication pool and the recombination object.
- *  9) The Replication object returns a set of genotypes, comprising the templates and the progeny. Recall that
+ *  9) Invoke the Replication object, passing to it the genotype replication pool and the recombination object.
+ *  10) The Replication object returns a set of genotypes, comprising the templates and the progeny. Recall that
  *     replication of a genotype without a mutation or recombination occurring will simply duplicate the template,
  *     so the Replication object only needs to update the genotype's number field.
  */
+
+// Copyright   : Copyright (C) 2015 Carol L. Ecale Zhou - All Rights Reserved.
+// License     : See LICENSE.md for license information
+//
+
 
 #ifndef POPULATION_H_
 #define POPULATION_H_
