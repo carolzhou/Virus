@@ -15,10 +15,13 @@
 #include "Genotype.h"
 
 // Conditional compilation
-//#define PRINT_GENOTYPE 
+//#define PRINT_GENOTYPE
+#define PRINT_GENOTYPE_SEQUENCE
 //#define PRINT_GENOTYPE_IN_DETAIL
 
 extern int iMAHONEY_THRESHOLD;
+extern int iNUMBER_SABIN1_POSITIONS;
+extern int iNUMBER_MAHONEY_POSITIONS;
 
 using namespace std;
 
@@ -40,6 +43,7 @@ CGenotype::CGenotype(int iGenotypeCount)
 	m_iPositionCount = 0;
 	m_iSelectionCount = 0;
 	m_dFitness = 0.0;
+    m_dFitness_synergy = 0.0;
 }
 
 CGenotype::CGenotype(SPosition positions[], int iNumPositions, int iGenotypeCount)
@@ -81,6 +85,7 @@ CGenotype::CGenotype(SPosition positions[], int iNumPositions, int iGenotypeCoun
 	m_iPositionCount = iNumPositions;
 	m_iSelectionCount = 0;
 	m_dFitness = 0.0;
+    m_dFitness_synergy = 0.0;
 }
 
 CGenotype::CGenotype(CGenotype *pGenotype, bool bExactCopy)
@@ -100,10 +105,11 @@ CGenotype::CGenotype(CGenotype *pGenotype, bool bExactCopy)
 	m_bNeurovirulent = pGenotype->m_bNeurovirulent; // True if any of the Position objects confers neurovirulence
 	m_bSabin1 = pGenotype->m_bSabin1;
 	m_bMahoney = pGenotype->m_bMahoney;
-	m_bLethal = pGenotype->m_bLethal; // Note: lethal genotype is removed at consolidation; until then, genotype exists
+	m_bLethal = pGenotype->m_bLethal; // Note: lethal genotype may be removed at consolidation; until then, genotype exists
 	m_iPositionCount = pGenotype->m_iPositionCount;
 	m_iSelectionCount = 0;
 	m_dFitness = pGenotype->m_dFitness;
+    m_dFitness_synergy = pGenotype->m_dFitness_synergy;
 	
 	if(bExactCopy)
 	{
@@ -132,9 +138,14 @@ CGenotype::~CGenotype()
 	m_vPositionSet.clear();
 }
 
+void CGenotype::UpdatePositionCount()
+{
+    m_iPositionCount = m_vPositionSet.size();
+}
+
 void CGenotype::PrintGenotype()
 {
-#ifdef PRINT_GENOTYPE
+#ifdef PRINT_GENOTYPE_SEQUENCE
 	for(unsigned int i = 0; i < m_vPositionSet.size(); i++)
 	{
 		m_vPositionSet[i]->PrintPosition();
@@ -157,6 +168,7 @@ void CGenotype::PrintGenotype()
 	cout << "m_iPositionCount      " << m_iPositionCount << endl;
 	cout << "m_iSelectionCount     " << m_iSelectionCount << endl;
 	cout << "m_dFitness            " << m_dFitness << endl;
+    cout << "m_dFitness_synergy    " << m_dFitness_synergy << endl;
 #endif
 }
 
@@ -182,6 +194,7 @@ bool CompareGenotype(CGenotype* pGenotype1, CGenotype* pGenotype2)
 
 void CGenotype::UpdateGenotypeStatistics()
 {
+    UpdatePositionCount();
 	IsSabin1();
 	IsMahoney();
 	IsNeurovirulent();
@@ -202,13 +215,16 @@ void CGenotype::ReportGenotypeStatistics()
 	cout << "Positions that confer neurovirulence: " << m_iNeurovirulentCount << endl;
 	cout << "Relative degree of neurovirulence: " << m_iNeurovirulentIndex << endl;
 	cout << "Genotype fitness: " << m_dFitness << endl;
+    cout << "Genotype fitness synergy: " << m_dFitness_synergy << endl;
 	cout << "Viability: " << (m_bLethal ? "LETHAL" : "viable") << endl;
 	cout << endl;
 }
 
 double CGenotype::CalculateFitness()
-// Returns genotype fitness measure. Note: genotype will have a positive fitness
-// value even if it has a lethal mutation (see IsLethal()). 
+// Returns genotype 'synergy' fitness measure. Note: genotype will have a positive fitness
+// value even if it has a lethal mutation (see IsLethal()).
+// Calculates absolute fitness (sum of all position fitness values) and also
+// a 'synergy' fitness value based on presumed synergy among Mahoney positions
 {
 	char cNucleotide;
 	double dFitness = 0.0; // Sum of fitness values over all positions
@@ -238,8 +254,20 @@ double CGenotype::CalculateFitness()
 		m_mPositionMap[(*it)->m_iPosition]->m_dFitness = dPositionFitness;  
 		dGenotypeFitness += dPositionFitness;
 	}
-	m_dFitness = dGenotypeFitness;  // Update at genotype level
-	return dGenotypeFitness;
+    
+    m_dFitness = dGenotypeFitness; // Update at genotype level
+    
+    // Simulate synergy among Mahoney mutations // *** CHECK: make power configurable? test effect...
+    double dMahoneyBoost = 0.0;
+    IsMahoney();  // Update the number of positions that resemble Mahoney
+    if(m_iPositionCount > 0)
+    {
+        dMahoneyBoost = 1.0 + (pow((double)m_iMahoneyCount,dMAHONEY_SYNERGY) / (double)m_iPositionCount) * dGenotypeFitness;
+    }
+    dGenotypeFitness *= dMahoneyBoost;
+    
+	m_dFitness_synergy = dGenotypeFitness;  // Update at genotype level
+	return m_dFitness_synergy;
 }
 
 bool CGenotype::IsLethal() //CHECK: re-write inspecting fitness at each position (code from UpdateGenotypeStatistics())
@@ -250,7 +278,7 @@ bool CGenotype::IsLethal() //CHECK: re-write inspecting fitness at each position
 	std::vector<SFitness*>::iterator it;
 	CPosition* nextPosition = NULL;
 
-	// Zero fitness at any position spells death for the genotype
+	// Zero fitness at any position may spell death for the genotype
 	// Update genotype fitness based on fitness object established in Qspp_main.cpp (pFitness) 
 	for(it = pFitness->m_vPositionSet.begin(); it != pFitness->m_vPositionSet.end(); it++)
 	{
@@ -298,7 +326,7 @@ bool CGenotype::IsSabin1()
 		else
 			nextPosition->m_bSabin1 = false;
 	}
-	if(iSabin1Count >= 54) // CHECK: should not hard code here
+	if(iSabin1Count >= iNUMBER_SABIN1_POSITIONS) //
 		bSabin = true;
 
 	m_bSabin1 = true; // Update at genotype level
@@ -326,7 +354,7 @@ bool CGenotype::IsMahoney()
 		else
 			nextPosition->m_bMahoney = false;
 	}
-    iMahoneyPercent = (int)((100 * iMahoneyCount) / 54);
+    iMahoneyPercent = (int)((100 * iMahoneyCount) / iNUMBER_MAHONEY_POSITIONS);
 	if(iMahoneyCount >= iMAHONEY_THRESHOLD) //
 		bMahoney = true;
 

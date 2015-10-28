@@ -72,6 +72,7 @@ public:
 	bool   IsLethal();  // Returns true if fitness is zero at any position (must UpdateStatistics first)
 	bool   AllowMutation();  // Based on fixationFactor, determines whether current mutation directive should proceed
 	char   SelectMutation();  // Selects a nucleotide substitution based on rates (e.g., transverionRate)
+    void   UpdatePositionCount(); // Counts number of positions and updates m_iPositionCount;
 
 	// data members
 	vector<CPosition*>    m_vPositionSet;
@@ -79,17 +80,18 @@ public:
 	int                   m_iGenotypeCount; // Count of the number of identical genotypes of this genotypeString
 	int                   m_iMahoneyCount;  // Count of the number of Position objects that have reached Mahoney state
 	int                   m_iSabin1Count;   // Count of the number of Position objects that remain in Sabin state
-	int		      m_iNeurovirulentCount; // Count of the number of Position objects in neurovirulent state
-	int		      m_iNeurovirulentIndex; // Degree of neurovirulence (sum positions' degree of neurovirulence values)
+	int		              m_iNeurovirulentCount; // Count of the number of Position objects in neurovirulent state
+	int		              m_iNeurovirulentIndex; // Degree of neurovirulence (sum positions' degree of neurovirulence values)
 	bool                  m_bNeurovirulent; // True if any of the Position objects confers neurovirulence
-	bool		      m_bSabin1;  // True if all nucleotides resemble Sabin1
-	bool		      m_bMahoney; // True if all nucleotides resemble Mahoney
-	bool		      m_bLethal;  // True if this genotype contains a lethal mutation at any position
+	bool		          m_bSabin1;  // True if all nucleotides resemble Sabin1
+	bool		          m_bMahoney; // True if all nucleotides resemble Mahoney
+	bool		          m_bLethal;  // True if this genotype contains a lethal mutation at any position
 	bool                  m_bNewRecombinant;
 	bool                  m_bMutatedReplicate;
-	int		      m_iPositionCount; // Number of positions defined for this genotype
+	int		              m_iPositionCount; // Number of positions defined for this genotype
 	int                   m_iSelectionCount; // Tallies the number of genotypes that have been selected for an inoculum (in Cloud.cpp)
 	double                m_dFitness; // Sum of fitness values over nucleotide positions
+    double                m_dFitness_synergy;  // Calculated in CalculateFitness(): assumed synergy among Mahoney mutations
 	//static int staticGenotypeCount; // how many instances of genotype have been created
 };
 
@@ -102,5 +104,6 @@ extern CGenotype* pNeurovirulent;
 extern CGenotype* pFoobar1;
 extern CGenotype* pFoobar2;
 extern CGenotype* pFoobar3;
+extern double dMAHONEY_SYNERGY;
 
 #endif /* GENOTYPE_H_ */

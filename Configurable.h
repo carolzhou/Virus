@@ -34,6 +34,7 @@
                                                           // Increasing this well beyond 1 will require parallel computing.
 #define FITNESS_ACCELERATOR           2.0  // -a / 2.0    // Increases replication as fitness increases; fitness effect is linear when k=1.0, off when k=0.0
 #define MAHONEY_THRESHOLD             80   // -t / 80     // Determines how many Mahoney mutations determine (essentially complete) reversion; suggest 80%
+#define MAHONEY_SYNERGY               2.0  // -s / 2.0    // Controls degree of fitness increase afforded by accumulated Mahoney mutations
 #define RETAIN_LETHALS                1    // -l / 1      // True means retain lethal mutant genotypes; False/0 if the should be routinely removed from population
 
 // Additional Parameter Defaults - ***Not yet in service

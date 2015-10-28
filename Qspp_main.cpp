@@ -74,6 +74,7 @@ unsigned long iNUMBER_OF_POPULATIONS         = NUMBER_OF_POPULATIONS;
 double        dFITNESS_ACCELERATOR           = FITNESS_ACCELERATOR;
 int           iMAHONEY_THRESHOLD             = MAHONEY_THRESHOLD;
 bool          bRETAIN_LETHALS                = true;
+double        dMAHONEY_SYNERGY               = MAHONEY_SYNERGY;
 
 // Not yet in service
 unsigned long iGENERATION_DEPTH              = GENERATION_DEPTH;
@@ -86,6 +87,10 @@ double        dTRANSVERSION_RATE             = TRANSVERSION_RATE;
 unsigned long iINFECTION_CYCLES              = INFECTION_CYCLES;
 unsigned long iFIXED_RESOURCES               = FIXED_RESOURCES;
 unsigned long iFIXED_SPACE                   = FIXED_SPACE;
+
+// Other constants
+unsigned long iNUMBER_SABIN1_POSITIONS       = 54;   // see FixedState.h
+unsigned long iNUMBER_MAHONEY_POSITIONS      = 54;   // see FixedState.h
 
 // There need only exist 1 of each standard genotype
 unsigned long iSABIN1_COUNT        = SABIN1_COUNT;        // Standard
@@ -199,6 +204,8 @@ int main(int argc, char* argv[])
             iMAHONEY_THRESHOLD = ((int)atoi(argv[i+1]));
         else if(!strcmp(argv[i],"-l"))
             bRETAIN_LETHALS = ((bool)atoi(argv[i+1]));
+        else if(!strcmp(argv[i],"-s"))
+            dMAHONEY_SYNERGY = ((double)atof(argv[i+1]));
 	}
 	cout << "Error rate = " << dERROR_RATE << endl;
 	cout << "Generational growth rate = " << dGENERATIONAL_GROWTH << endl;
@@ -223,8 +230,8 @@ int main(int argc, char* argv[])
 	pNeurovirulent = new CGenotype(NeurovirulentPositions, NUM_NEUROVIRULENT_POSITIONS);
 	
 	// These are starting genotypes for running a simulation
-	pSabin         = new CGenotype(Sabin1Positions, NUM_SABIN1_POSITIONS);  
-
+	pSabin         = new CGenotype(Sabin1Positions, NUM_SABIN1_POSITIONS);
+    
 	// Creating Fitness based on Mahoney and Neurovirulence
 	//pFitness = new CFitness(Fitness1Positions, NUM_FITNESS1_POSITIONS);
 	pFitness = new CFitness(Fitness3Positions, NUM_FITNESS3_POSITIONS);
