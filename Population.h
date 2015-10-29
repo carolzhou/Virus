@@ -84,11 +84,15 @@ public:
 	bool IsExtinct();                  // Returns true if all of the genotypes have lethal mutation; genotype count is zero
 	unsigned long CountGenotypes();    // Returns the number of genotypes in the Population
 	double CalculatePopulationFitness(); // Returns average of fitness values across genotypes
-	void UpdatePopulationStatistics(); // Provide summary statistics regarding Sabin, Mahoney, Neurovirulence.	
-	int ReportPopulationStatistics(); // Report summary of statistics gathered in UpdatePopulationStatistics().
+	void UpdatePopulationStatistics(); // Provide summary statistics regarding Sabin, Mahoney, Neurovirulence	
+	int ReportPopulationStatistics(); // Report summary of statistics gathered in UpdatePopulationStatistics()
+	void PrintPopulationDistribution(); // Display population distribution as a sorted list of numbers
 	void Consolidate();
 	bool ReplicateOnce();
 	void Replicate();                  // Constructs a Pool object and invokes replication cycle
+	double CalculatePopulationHealth();  // Calculate proportion of healthy (non-lethal/viable) genotypes
+	void PurgeDefectives();            // Removes a portion of the genotypes with a lethal mutation
+	double CalculateVariance();        // Calculates variance among genotype m_iGenotypeCount values; crude measure of pop diversity
 
 	void MutateGenotypes(vector<CGenotype*> &vGenotypeSet); // Performs genotype mutation
 	CGenotype* CombineGenotypes(CGenotype* pGenotype_a, CGenotype* pGenotype_b); // Performs copy-choice replication
@@ -109,10 +113,11 @@ public:
 	double             m_dMahoneyReversionIndex;   // Measure of the degree to which the population has reverted to Mahoney genotype
 	unsigned long      m_iNumOfDefectiveGenotypes; // Sum of genotypes with a lethal mutation
 	double             m_dAverageFitness;          // Average fitness value over member genotypes
-	bool		       m_bMahoney;                 // True if any genotype resembled Mahoney in sequence
+	bool		   m_bMahoney;                 // True if any genotype resembled Mahoney in sequence
 	bool               m_bNeurovirulent;           // True if any genotype is neurovirulent
 	bool               m_bExtinct;                 // True if no viable genotypes remain
-	unsigned long      m_iGenotypeMaxCount;        // Number of genotypes (total, including defective/lethal) reached
+	double             m_dPopulationHealth;        // Proportion of viable genotypes to total genotypes
+	double             m_dVariance;                // Statistical measure of population diversity, assuming normal distribution
 };
 
 

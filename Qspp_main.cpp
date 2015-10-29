@@ -40,6 +40,9 @@
 //    potential impact of changes in the frequencies of these known genetic
 //    mechanisms.
 //
+// Programmer's notes: 
+//  1) see Reuer 1990 JVirol for real lethal muts
+//  2) see Gregori 2014 Bioinformatics for Qspp diversity
 //============================================================================
 
 #include <iostream>
@@ -73,8 +76,9 @@ unsigned long iNUM_GENS_TO_CONSOLIDATE       = NUM_GENS_TO_CONSOLIDATE;
 unsigned long iNUMBER_OF_POPULATIONS         = NUMBER_OF_POPULATIONS;
 double        dFITNESS_ACCELERATOR           = FITNESS_ACCELERATOR;
 int           iMAHONEY_THRESHOLD             = MAHONEY_THRESHOLD;
-bool          bRETAIN_LETHALS                = true;
+bool          bRETAIN_LETHALS                = RETAIN_LETHALS;
 double        dMAHONEY_SYNERGY               = MAHONEY_SYNERGY;
+int           iPURGE_PERCENT                 = PURGE_PERCENT;
 
 // Not yet in service
 unsigned long iGENERATION_DEPTH              = GENERATION_DEPTH;
@@ -200,12 +204,17 @@ int main(int argc, char* argv[])
 			iNUMBER_OF_POPULATIONS = ((unsigned)atol(argv[i+1]));
 		else if(!strcmp(argv[i],"-a"))
 			dFITNESS_ACCELERATOR = ((double)atof(argv[i+1]));
-        else if(!strcmp(argv[i],"-t"))
-            iMAHONEY_THRESHOLD = ((int)atoi(argv[i+1]));
-        else if(!strcmp(argv[i],"-l"))
-            bRETAIN_LETHALS = ((bool)atoi(argv[i+1]));
-        else if(!strcmp(argv[i],"-s"))
-            dMAHONEY_SYNERGY = ((double)atof(argv[i+1]));
+        	else if(!strcmp(argv[i],"-t"))
+        	        iMAHONEY_THRESHOLD = ((int)atoi(argv[i+1]));
+        	else if(!strcmp(argv[i],"-l"))
+		{
+			if(!strcmp(argv[i+1],"n") || !strcmp(argv[i+1],"no") || !strcmp(argv[i+1],"false") || !strcmp(argv[i+1],0))
+				bRETAIN_LETHALS = false; // Default is true
+		}
+        	else if(!strcmp(argv[i],"-s"))
+        	        dMAHONEY_SYNERGY = ((double)atof(argv[i+1]));
+		else if(!strcmp(argv[i],"-z"))
+			iPURGE_PERCENT = ((int)atoi(argv[i+1]));
 	}
 	cout << "Error rate = " << dERROR_RATE << endl;
 	cout << "Generational growth rate = " << dGENERATIONAL_GROWTH << endl;
@@ -215,9 +224,9 @@ int main(int argc, char* argv[])
 	cout << "Number of passages = " << iNUMBER_OF_PASSAGES << endl;
 	cout << "Number of generations to consolidate = " << iNUM_GENS_TO_CONSOLIDATE << endl;
 	cout << "Number of populations = " << iNUMBER_OF_POPULATIONS << endl;
-    cout << "Fitness accelerator = " << dFITNESS_ACCELERATOR << endl;
-    cout << "Mahoney threshold (%) = " << iMAHONEY_THRESHOLD << endl;
-    cout << "Retain lethals is " << (bRETAIN_LETHALS ? "true" : "false") << endl;
+    	cout << "Fitness accelerator = " << dFITNESS_ACCELERATOR << endl;
+    	cout << "Mahoney threshold (%) = " << iMAHONEY_THRESHOLD << endl;
+    	cout << "Retain lethals is " << (bRETAIN_LETHALS ? "true" : "false") << endl;
 
 	cout << endl << "Creating initial genotypes..." << endl;
 	

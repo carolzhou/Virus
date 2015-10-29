@@ -2,7 +2,7 @@
  * Population.cpp
  *
  *  Created on: May 7, 2009
- *  Last update: 27 October 2015
+ *  Last update: 28 October 2015
  *      Author: Carol L. Ecale Zhou
  *
  */
@@ -23,8 +23,9 @@
 //#define PRINT_GENOTYPE
 //#define REPORT_GENOTYPE_STATS
 //#define PRINT_DETAIL
-#define BRIEF_REPORT
+//#define BRIEF_REPORT
 //#define LONG_REPORT
+#define ONE_LINER // All stats reported on single line of text
 
 using namespace std;
 
@@ -35,6 +36,9 @@ extern double        dHOMOLOGOUS_RECOMBINATION_RATE;
 extern unsigned long iNUM_GENS_TO_CONSOLIDATE;
 extern bool          bRETAIN_LETHALS;
 extern double        dFITNESS_ACCELERATOR;
+extern int           iPURGE_PERCENT;
+
+static unsigned long static_iReportNo = 0;
 
 static TRandomMersenne oRandomNumGenerator(10);
 static unsigned long   iRandomNumGen = 0;
@@ -60,7 +64,8 @@ CPopulation::CPopulation()
 	m_bMahoney = false;
 	m_bNeurovirulent = false;
 	m_bExtinct = false; // CHECK: true initially, actually, for an emptly population ;-)
-	m_iGenotypeMaxCount = 0;
+	m_dPopulationHealth = 100.0; // Assume all viable genotypes to start
+	m_dVariance = 0.0; 
 }
 
 CPopulation::~CPopulation()
@@ -104,6 +109,7 @@ void CPopulation::PrintPopulation()
 	}
 #ifdef PRINT_POPULATION_IN_DETAIL
 	ReportPopulationStatistics();
+	PrintPopulationDistribution();
 #endif
 }
 
@@ -124,7 +130,7 @@ bool CPopulation::IsNeurovirulent() // Reports whether neurovirulence has been r
 			if(m_vGenotypeSet[i]->IsNeurovirulent())
 			{
 				iNeurovirulentCount += m_vGenotypeSet[i]->m_iGenotypeCount;
-				iNeurovirulentIndex += m_vGenotypeSet[i]->m_iNeurovirulentIndex;
+				iNeurovirulentIndex += (m_vGenotypeSet[i]->m_iGenotypeCount * m_vGenotypeSet[i]->m_iNeurovirulentIndex);
 				bNeurovirulent = true;
 			}
 		}
@@ -203,6 +209,32 @@ bool CPopulation::IsExtinct()
 		cout << "A Population has gone extinct!" << endl;
 
 	return bExtinct;
+}
+
+double CPopulation::CalculateVariance()
+// This is a crude measure of population diversity
+// Assuming that the distribution of genotype frequencies (m_iGenotypeCount) is "normal",
+// Calculate the variance and use that as a measure of population diversity
+// Note:  A better measure of population diversity might be derived from information in
+// the following publication:  Gregori et al 2014, "Inference with viral quasispecies
+// diversity indices: clonal and NGS approaches", Bioinformatics Vol. 30 no. 8, pp 1104-11.
+{
+	double dVariance = 0.0;
+	int iGenotypeCount = CountGenotypes();                 // Total number of genotypes
+	int iDistinctGenotypeCount = m_vGenotypeSet.size();    // Number of distinct genotype sequences
+
+	double dMean = (double)iGenotypeCount / (double)iDistinctGenotypeCount;
+	double dSumOfSquares = 0.0;  // Sum of squares of distances of each genotype count from mean 
+
+	for(unsigned int i = 0; i < m_vGenotypeSet.size(); i++)
+	{
+		dSumOfSquares += pow((dMean - (double)m_vGenotypeSet[i]->m_iGenotypeCount),2);
+	}
+
+	dVariance = dSumOfSquares / (double)m_vGenotypeSet.size();
+	m_dVariance = dVariance;	
+
+	return dVariance;
 }
 
 double CPopulation::CalculatePopulationFitness()
@@ -316,46 +348,154 @@ void CPopulation::UpdatePopulationStatistics()
 	IsNeurovirulent();
 	IsExtinct();
 	CalculatePopulationFitness();
+	CalculatePopulationHealth();
+}
+
+double CPopulation::CalculatePopulationHealth()
+// First call CalculatePopulationFitness() to assure data are up to date. 
+{
+	double dPopulationHealth = 100.0;  // Assume perfect health to start
+
+	if(IsExtinct())  // Updates total and defective genotype counts
+	{	
+		// Extinction spells worst possible health
+		dPopulationHealth = 0.0; // Population is extinct
+	}
+	else
+	{
+		// Health is the percent of healthy genotypes in the population
+		dPopulationHealth = (int)(100 * (((double)m_iNumOfGenotypes - (double)m_iNumOfDefectiveGenotypes) / (double)m_iNumOfGenotypes) + 0.005);
+	}
+
+	m_dPopulationHealth = dPopulationHealth;
+	return(dPopulationHealth);
+}
+
+void CPopulation::PurgeDefectives() // *** CHECK: This method is incomplete
+// *** Need to implement a search through genotypes and collect ones to purge (see SelectGenotype())
+// Remove some or all of the defective genotypes. 
+// What proportion to remove is determined by input parameter, expressed as a percent.
+{
+	int iPurgeCount = 0;
+	unsigned int iNumberToPurge = 0;
+
+	if((0 < iPURGE_PERCENT) && (iPURGE_PERCENT < 101)) // Check if in range; should be controlled parameter in main
+	{
+		iNumberToPurge = (int)(m_iNumOfDefectiveGenotypes * (iPURGE_PERCENT / 100));
+		for(unsigned int i = 0; i < m_vGenotypeSet.size(); i++)
+		{
+			iPurgeCount += 1;
+		}
+	}
 }
 
 int CPopulation::ReportPopulationStatistics()
 {
-	UpdatePopulationStatistics(); // *** May not be necessary, and may slow execution, but better safe than sorry
 	double dAveNeurovirulentIndex = 0.0;
+    	double dDiversity = 0.0; 
+	unsigned int iDistinctCount = 0;
+
+	UpdatePopulationStatistics(); // *** May not be necessary, and may slow execution, but better safe than sorry
+
+	// Calculate diversity  // *** CHECK devise better method
+	// Calculates the ratio of distinct to total genotypes
 	if(m_iNumOfNeurovirulentGenotypes)
 	{
 		dAveNeurovirulentIndex = (double)m_iNeurovirulentIndex / (double)m_iNumOfNeurovirulentGenotypes;
 	}
-	int iDistinctCount = m_vGenotypeSet.size();
-    double dDiversity = (double)iDistinctCount / (double)m_iNumOfGenotypes; //*** CHECK: do this better via Hamming distance
+	iDistinctCount = m_vGenotypeSet.size();
+    	dDiversity = (int)(100 * (double)iDistinctCount / (double)m_iNumOfGenotypes + 0.5); 
 
 	cout << "Population Statistics: " << endl;
 
 #ifdef BRIEF_REPORT
-	cout << "P-gud: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << dDiversity << endl;
-	cout << "N-gmi: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << ' ' << endl;
-	cout << "M-gmi: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << ' ' << endl;
-	cout << "DFV: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << ' ';  
+	cout << "P-genomes,distinct,diversity,health: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << dDiversity << ' ' << m_dPopulationHealth << '%' << endl;
+	cout << "P-defective,fitness,viability: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << endl;  
+	cout << "N-genomes,neurovirIndex,aveNeurovir: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << endl;
+	cout << "M-genomes,positions,reversion: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << endl;
+	PrintPopulationDistribution();
 	cout << endl;
+#endif
+#ifdef ONE_LINER
+	++static_iReportNo;
+	if(static_iReportNo == 1)
+	{
+		cout << "Report No.\t" << "\tPop:\tGenotypes\tDistinct\tDiversity\tHealth\tDefective\tAveFitness\tViability\tNeur:\tGenotypes\tNVindex\tAveNVindex\tMahy:\tGenotypes\tPositions\tReversion" << endl;
+	}
+	cout << "Report " << static_iReportNo << "\tPop:\t" << m_iNumOfGenotypes << '\t' << iDistinctCount << '\t' << dDiversity << '\t' << m_dPopulationHealth << "%\t";
+	cout << m_iNumOfDefectiveGenotypes << '\t' << m_dAverageFitness << '\t' << (m_bExtinct ? "E" : "V") << '\t';
+	cout << "Neur:\t" << m_iNumOfNeurovirulentGenotypes << '\t' << m_iNeurovirulentIndex << '\t' << dAveNeurovirulentIndex << '\t';
+	cout << "Mahy:\t" << m_iNumOfMahoneyGenotypes << '\t' << m_iNumOfMahoneyPositions << '\t' << m_dMahoneyReversionIndex << endl;
 #endif
 #ifdef LONG_REPORT
 	cout << "Absolute number of genotypes in this population: " << m_iNumOfGenotypes << endl;
 	cout << "Number of distinct genotypes: " << iDistinctCount << endl;
-	cout << "Max genotype count " << m_iGenotypeMaxCount << endl;;
+	cout << "Total number of genotypes " << m_iNumOfGenotypes << endl;;
 	cout << "Number of neurovirulent genotypes: " << m_iNumOfNeurovirulentGenotypes << endl;
 	cout << "Neurovirulence index: " << m_iNeurovirulentIndex << endl;
 	cout << "Average neurovirulence: " << dAveNeurovirulentIndex << endl;
 	cout << "Number of Mahoney genotypes: " << m_iNumOfMahoneyGenotypes << endl;
 	cout << "Number of Mahoney mutations in population: " << m_iNumOfMahoneyPositions << endl;
-    cout << "Number of genotypes that have reached " << iMAHONEY_THRESHOLD << " Mahoney status: " << cout << dMahoneyReversionIndex << cout << endl;
+    	cout << "Number of genotypes that have reached " << iMAHONEY_THRESHOLD << " Mahoney status: " << cout << dMahoneyReversionIndex << cout << endl;
 	cout << "Mahoney reversion index: " << m_dMahoneyReversionIndex << endl;
 	cout << "Number of defective genotypes: " << m_iNumOfDefectiveGenotypes << endl;
-    cout << "Estimate of population diversity: " << dDiversity << endl;
+    	cout << "Estimate of population diversity simple: " << dDiversity << endl;
+    	cout << "Estimate of population diversity variance: " << m_dVariance << endl;
 	cout << "Average genotype fitness over population: " << m_dAverageFitness << endl;
+	cout << "Relative health of population: " << m_dPopulationHealth << endl;
 	cout << "This population is " << (m_bExtinct ? "EXTINCT" : "Viable") << endl;
 	cout << endl;
+	PrintPopulationDistribution();
 #endif
 	return(0);
+}
+
+void CPopulation::PrintPopulationDistribution()
+{
+	vector<int> identicals;
+	double dMean = 0.0;
+	unsigned int iMedian = 0;
+	unsigned int iMidPoint = 0;
+	unsigned int iMin = iBURST_SIZE; // 
+	unsigned int iMax = 0;
+
+	// Gather the numbers of identical genotypes in population	
+	for(unsigned int i = 0; i < m_vGenotypeSet.size(); i++)
+	{
+		identicals.push_back(m_vGenotypeSet[i]->m_iGenotypeCount);
+	}
+
+	// Sort in order from sparse to abundant genotypes
+	sort(identicals.begin(),identicals.end());
+
+	// Calculate mean number of identicals per genotype
+	if(m_vGenotypeSet.size() > 0)
+	{
+		dMean = (double)m_iNumOfGenotypes / (double)m_vGenotypeSet.size();
+	}
+	
+	// Calculate mid point of identicals list and get median value // *** CHECK this
+	iMidPoint = (int)(((double)identicals.size() / 2.0) + 0.5);
+	iMedian = identicals[iMidPoint];
+
+	// Print raw distribution
+	cout << "Pop distribution: ";
+	for(vector<int>::const_iterator it=identicals.begin(); it!=identicals.end(); ++it)
+	{
+		cout << *it << " ";
+		if(iMin > *it)
+		{
+			iMin = *it;
+		} 
+		if(iMax < *it)
+		{
+			iMax = *it;
+		}
+	}
+	cout << endl;
+	
+	// Calculate and print basic distribution statistics  
+	cout << "Distribution stats (genotype copy min, max, mean, and median):\t" << iMin << '\t' << iMax << '\t' << dMean << '\t' << iMedian << endl;
 }
 
 void CPopulation::Consolidate(void) // Remove redundancy in genotype list; collapse equivalents
@@ -421,7 +561,7 @@ void CPopulation::Consolidate(void) // Remove redundancy in genotype list; colla
 		}
 		else // If genotype is lethal (is a defective interfering particle), retain depending on bool
 		{
-			if(vNewGenotypeSet[i]->IsLethal() && !RETAIN_LETHALS)
+			if(vNewGenotypeSet[i]->IsLethal() && !bRETAIN_LETHALS)
 			//if(vNewGenotypeSet[i]->IsLethal())  
 			{
 #ifdef PRINT_DETAIL
@@ -454,7 +594,9 @@ void CPopulation::Consolidate(void) // Remove redundancy in genotype list; colla
 
 unsigned long CPopulation::CountGenotypes()
 {
-	unsigned long iTotal = 0;
+	unsigned long iHealthyTally = 0;  // Sum of "healthy" genotypes
+	unsigned long iDefectiveTally = 0; // Sum of defective (lethal) genotypes
+
 	for(unsigned int i = 0; i < m_vGenotypeSet.size(); i++)
 	{
 		if(m_vGenotypeSet[i] == NULL)
@@ -463,16 +605,20 @@ unsigned long CPopulation::CountGenotypes()
 		}
 		else
 		{
-			iTotal += m_vGenotypeSet[i]->m_iGenotypeCount;
+			if(m_vGenotypeSet[i]->IsLethal())
+			{
+				iDefectiveTally += m_vGenotypeSet[i]->m_iGenotypeCount;
+			}
+			else
+			{
+				iHealthyTally += m_vGenotypeSet[i]->m_iGenotypeCount;
+			}
 		}
 	}
-	m_iNumOfGenotypes = iTotal;
+	m_iNumOfGenotypes = iHealthyTally + iDefectiveTally;
+	m_iNumOfDefectiveGenotypes = iDefectiveTally;
 
-	// Update absolute genotype count, including defective/lethal
-	if(m_iGenotypeMaxCount < m_iNumOfGenotypes) 
-		m_iGenotypeMaxCount = m_iNumOfGenotypes;
-
-	return iTotal;
+	return m_iNumOfGenotypes; // Return grand total
 }
 
 CGenotype* CPopulation::SelectGenotype(int iRandomPosition)
@@ -591,12 +737,12 @@ void CPopulation::Replicate()
 					m_vGenotypeSet[z]->PrintGenotype();
 			}
 #endif
+			PurgeDefectives(); // Remove some/all defective genotypes (with lethal mutation)
 			if(!ReplicateOnce())
 				break;
 			if((m_iGenerationNum % iNUM_GENS_TO_CONSOLIDATE) == 0)
 			{
 				cout << "Consolidating at iNUM_GENS_TO_CONSOLIDATE" << endl;
-				//bREMOVE_LETHALS = FALSE; // Be sure not to remove lethals just yet
 				Consolidate();
 			}
 		}

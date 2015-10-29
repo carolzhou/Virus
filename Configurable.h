@@ -20,35 +20,36 @@
 
 // Defaults - Realistic defaults in comments
 // PARAMETER default value // command-line parameter / suggested value // explanation
-#define ERROR_RATE                    0.1  // -e / 0.001  // should vary from 1/1000 to 1/100,000 nt per replication, as per literature
-#define GENERATIONAL_GROWTH           1.0  // -g / 1.0    // population growth factor after a single replication cycle; 1.0 assumes every genome can replicate
-#define HOMOLOGOUS_RECOMBINATION_RATE 0.3  // -r / 0.30   // zero to one; zero=never, one=always; 0.30 from literature 
-#define BURST_SIZE                    1000 // -b / 1000   // population size when cell resources become exhausted or cell lysis (10k-100k)
-#define MULTIPLICITY_OF_INFECTION     10   // -i / 10     // how many genotypes to randomly select for next inoculum / passage
-                                                          // Can set much higher to simulate cell-to-cell spread in real infection
-                                                          // Initial MOI will be determined by inoculating genotype m_iNumOfGenotypes
-#define NUMBER_OF_PASSAGES            5    // -p / 5+     // Zero passages is a single inoculum, a single plate of cells
-#define NUM_GENS_TO_CONSOLIDATE       5    // -c / 5      // Consolidation reduces memory needed to hold genotype data
-						          // Adjust this to balance execution speed with memory usage
-#define NUMBER_OF_POPULATIONS         1    // -P / 100000 // realistic would be up to 1 million cells (populations) on a plate
-                                                          // Increasing this well beyond 1 will require parallel computing.
-#define FITNESS_ACCELERATOR           2.0  // -a / 2.0    // Increases replication as fitness increases; fitness effect is linear when k=1.0, off when k=0.0
-#define MAHONEY_THRESHOLD             80   // -t / 80     // Determines how many Mahoney mutations determine (essentially complete) reversion; suggest 80%
-#define MAHONEY_SYNERGY               2.0  // -s / 2.0    // Controls degree of fitness increase afforded by accumulated Mahoney mutations
-#define RETAIN_LETHALS                1    // -l / 1      // True means retain lethal mutant genotypes; False/0 if the should be routinely removed from population
-
+#define ERROR_RATE                    0.001 // -e / 0.001  // should vary from 1/1000 to 1/100,000 nt per replication, as per literature
+#define GENERATIONAL_GROWTH           1.0   // -g / 1.0    // population growth factor after a single replication cycle; 1.0 assumes every genome can replicate
+#define HOMOLOGOUS_RECOMBINATION_RATE 0.30  // -r / 0.30   // zero to one; zero=never, one=always; 0.30 from literature 
+#define BURST_SIZE                    1000  // -b / 1000   // population size when cell resources become exhausted or cell lysis (10k-100k)
+#define MULTIPLICITY_OF_INFECTION     100   // -i / 10     // how many genotypes to randomly select for next inoculum/passage
+                                                           // Can set much higher to simulate cell-to-cell spread in real infection
+                                                           // Initial MOI will be determined by inoculating genotype m_iNumOfGenotypes
+#define NUMBER_OF_PASSAGES            5     // -p / 5+     // Zero passages is a single inoculum, a single plate of cells
+#define NUM_GENS_TO_CONSOLIDATE       10    // -c / 10     // Consolidation reduces memory needed to hold genotype data
+						           // Adjust this to balance execution speed with memory usage
+#define NUMBER_OF_POPULATIONS         5     // -P / 100000 // realistic would be up to 1 million cells (populations) on a plate
+                                                           // Increasing this well beyond 1 will require parallel computing.
+#define FITNESS_ACCELERATOR           2.0   // -a / 2.0    // Increases replication as fitness increases; fitness effect is linear when k=1.0, off when k=0.0
+#define MAHONEY_THRESHOLD             60    // -t / 80     // Determines how many Mahoney mutations determine (essentially complete) reversion; suggest 80%
+#define MAHONEY_SYNERGY               2.0   // -s / 2.0    // Controls degree of fitness increase afforded by accumulated Mahoney mutations
+#define RETAIN_LETHALS                true  // -l / true    // True means retain lethal mutant genotypes; 'n' if should be routinely removed from population
+	
 // Additional Parameter Defaults - ***Not yet in service
 // PARAMETER default value // command-line parameter / suggested value // explanation
-#define GENERATION_DEPTH              10  // -d / 100    // number of replication cycles in a simulation (all passages)
-#define FIXATION_RATE                 0.1 // -f / 0.1    // fully fixed is zero; 1 = no tendency for fixation of a mutation (applies to Mahoney nt)
-#define MUTATIONAL_PREFERENCE         1.0 // -m / 1.0    // assume for now that there is no mutational preference
-#define GENERATIONS_PER_CELL          1   // -G / 5      //
-#define CELL_DENSITY                  1   //    / 100000 // number of cells on a culture plate; realistic would be 100k to 1million; for first model, use trivial case
-#define TRANSITION_RATE               0.5 // -t /        // need to get this from literature
-#define TRANSVERSION_RATE             0.5 // -T /        // need to get this from literature 
-#define INFECTION_CYCLES              1   //    /        //  ?
-#define FIXED_RESOURCES               100 //    / 100    // Represents 100% of what is available; don't need this if lysis terminates replication in cell
-#define FIXED_SPACE                   100 //    / 100    // Represents 100% of what is available
+#define PURGE_PERCENT                 50    // -z / 50     // Percent of genotypes with lethal mutation to remove from the population (compromise for RETAIN_LETHALS)
+#define GENERATION_DEPTH              100   // -d / 100    // number of replication cycles in a simulation (all passages; so one could stop the sim using this constant)
+#define FIXATION_RATE                 0.1   // -f / 0.1    // fully fixed is zero; 1 = no tendency for fixation of a mutation (applies to Mahoney nt)
+#define MUTATIONAL_PREFERENCE         1.0   // -m / 1.0    // assume for now that there is no mutational preference
+#define GENERATIONS_PER_CELL          5     // -G / 5      // number of replication cycles in a cell, if this should be limited; more relevant for lysogenic
+#define CELL_DENSITY                  1     //    / 100000 // number of cells on a culture plate; realistic would be 100k to 1million; for first model, use trivial case
+#define TRANSITION_RATE               0.5   // -t /        // need to get this from literature
+#define TRANSVERSION_RATE             0.5   // -T /        // need to get this from literature 
+#define INFECTION_CYCLES              1     //    /        //  ?
+#define FIXED_RESOURCES               100   //    / 100    // Represents 100% of what is available; don't need this if lysis terminates replication in cell
+#define FIXED_SPACE                   100   //    / 100    // Represents 100% of what is available
 
 // Other defaults
 #define POSITION_SET_SIZE 55 // Sabin/Mahoney differ at 54 positions, 1 additional confers neurovirulence beyond those distinguishing Sabin/Mahoney

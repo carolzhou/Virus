@@ -31,7 +31,7 @@
 // Fitness values may be assigned based on experimental data.
 // 0.0 indicates a lethal mutation; 1.0 is highly selected.
 // Position 1 in data structure indicates position along genome.
-// Positions 1-4 correspond to A,C,G,T at that position.
+// Positions 1-4 correspond to A,C,G,T|U at that position.
 // For development and testing, assign highest fitness values
 //   to neurovirulent positions/nucleotides, and moderate
 //   fitness values to Mahoney sequence. A lethal mutation would
@@ -215,10 +215,10 @@ struct SFitness Fitness3Positions[] =
 	{6616, 0.2, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
 	{6679, 0.5, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
 	{6853, 0.5, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-	{7071, 0.5, 0.8, 0.0, 0.2}, // C - Mahoney; U - Sabin1; G - LETHAL (testing)
-	{7198, 0.2, 0.5, 0.0, 0.8}, // U - Mahoney; A - Sabin1; G - LETHAL (testing)
-	{7243, 0.2, 0.5, 0.0, 0.8}, // U - Mahoney; A - Sabin1; G - LETHAL (testing)
-	{7410, 0.5, 0.2, 0.0, 0.8}, // U - Mahoney; C - Sabin1; G - LETHAL (testing)
+	{7071, 0.5, 0.8, 0.0, 0.2}, // C - Mahoney; U - Sabin1; G - LETHAL (testing) // Arbitrarily assigned // *** CHECK see Reuer 1990 JVirol for real lethal muts
+	{7198, 0.2, 0.5, 0.0, 0.8}, // U - Mahoney; A - Sabin1; G - LETHAL (testing) // Arbitrarily assigned
+	{7243, 0.2, 0.5, 0.0, 0.8}, // U - Mahoney; A - Sabin1; G - LETHAL (testing) // Arbitrarily assigned
+	{7410, 0.5, 0.2, 0.0, 0.8}, // U - Mahoney; C - Sabin1; G - LETHAL (testing) // Arbitrarily assigned
 	{7441, 0.8, 0.5, 0.2, 0.5}  // A - Mahoney; G - Sabin1
 };
 #define NUM_FITNESS3_POSITIONS (sizeof(Fitness3Positions) / sizeof(struct SFitness))
@@ -382,7 +382,7 @@ struct SPosition NeurovirulentPositions[] =
 };
 #define NUM_NEUROVIRULENT_POSITIONS (sizeof(NeurovirulentPositions) / sizeof(struct SPosition))
 
-// Sampe input data for Inoculum
+// Sample input data for Inoculum
 struct SPosition Foobar1Positions[] =
 {
 	{'Z', 21, false, false, 0},
