@@ -28,14 +28,15 @@
                                                            // Can set much higher to simulate cell-to-cell spread in real infection
                                                            // Initial MOI will be determined by inoculating genotype m_iNumOfGenotypes
 #define NUMBER_OF_PASSAGES            5     // -p / 5+     // Zero passages is a single inoculum, a single plate of cells
-#define NUM_GENS_TO_CONSOLIDATE       10    // -c / 10     // Consolidation reduces memory needed to hold genotype data
+#define NUM_GENS_TO_CONSOLIDATE       1     // -c / 1      // Consolidation reduces memory needed to hold genotype data and speeds execution
 						           // Adjust this to balance execution speed with memory usage
 #define NUMBER_OF_POPULATIONS         5     // -P / 100000 // realistic would be up to 1 million cells (populations) on a plate
                                                            // Increasing this well beyond 1 will require parallel computing.
 #define FITNESS_ACCELERATOR           2.0   // -a / 2.0    // Increases replication as fitness increases; fitness effect is linear when k=1.0, off when k=0.0
 #define MAHONEY_THRESHOLD             60    // -t / 80     // Determines how many Mahoney mutations determine (essentially complete) reversion; suggest 80%
 #define MAHONEY_SYNERGY               2.0   // -s / 2.0    // Controls degree of fitness increase afforded by accumulated Mahoney mutations
-#define RETAIN_LETHALS                true  // -l / true    // True means retain lethal mutant genotypes; 'n' if should be routinely removed from population
+#define RETAIN_LETHALS                true  // -l / true   // True means retain lethal mutant genotypes; 'n' if should be routinely removed from population
+#define FILTER_DEFECTIVES             true  // -f / true   // True means that genotypes w/letal mutation are excluded from inoculum (implies DIPs replicate but do not infect)
 	
 // Additional Parameter Defaults - ***Not yet in service
 // PARAMETER default value // command-line parameter / suggested value // explanation

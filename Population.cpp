@@ -17,7 +17,7 @@
 #include <math.h>
 #include "Population.h"
 
-// Conditional compilation
+// Conditional compilation: controlling what and how much to print
 //#define PRINT_POPULATION
 #define PRINT_POPULATION_IN_DETAIL
 //#define PRINT_GENOTYPE
@@ -410,7 +410,7 @@ int CPopulation::ReportPopulationStatistics()
 
 #ifdef BRIEF_REPORT
 	cout << "P-genomes,distinct,diversity,health: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << dDiversity << ' ' << m_dPopulationHealth << '%' << endl;
-	cout << "P-defective,fitness,viability: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << endl;  
+	cout << "P-defective,fitness,viability: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << ' ' << m_iGenerationNum << endl;  
 	cout << "N-genomes,neurovirIndex,aveNeurovir: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << endl;
 	cout << "M-genomes,positions,reversion: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << endl;
 	PrintPopulationDistribution();
@@ -420,12 +420,12 @@ int CPopulation::ReportPopulationStatistics()
 	++static_iReportNo;
 	if(static_iReportNo == 1)
 	{
-		cout << "Report No.\t" << "\tPop:\tGenotypes\tDistinct\tDiversity\tHealth\tDefective\tAveFitness\tViability\tNeur:\tGenotypes\tNVindex\tAveNVindex\tMahy:\tGenotypes\tPositions\tReversion" << endl;
+		cout << "Report No." << "\tPgtps\tDstnct\tDivers\tHealth\tDefect\tAveFit\tViabl\tGens\tNgtps\tNVind\tAvNVind\tMgtps\tMuts\tRvsn" << endl;
 	}
-	cout << "Report " << static_iReportNo << "\tPop:\t" << m_iNumOfGenotypes << '\t' << iDistinctCount << '\t' << dDiversity << '\t' << m_dPopulationHealth << "%\t";
-	cout << m_iNumOfDefectiveGenotypes << '\t' << m_dAverageFitness << '\t' << (m_bExtinct ? "E" : "V") << '\t';
-	cout << "Neur:\t" << m_iNumOfNeurovirulentGenotypes << '\t' << m_iNeurovirulentIndex << '\t' << dAveNeurovirulentIndex << '\t';
-	cout << "Mahy:\t" << m_iNumOfMahoneyGenotypes << '\t' << m_iNumOfMahoneyPositions << '\t' << m_dMahoneyReversionIndex << endl;
+	cout << "Report " << static_iReportNo << "\t" << m_iNumOfGenotypes << '\t' << iDistinctCount << '\t' << dDiversity << '\t' << m_dPopulationHealth << "%\t";
+	cout << m_iNumOfDefectiveGenotypes << '\t' << m_dAverageFitness << '\t' << (m_bExtinct ? "E" : "V") << '\t' << m_iGenerationNum << '\t';
+	cout << m_iNumOfNeurovirulentGenotypes << '\t' << m_iNeurovirulentIndex << '\t' << dAveNeurovirulentIndex << '\t';
+	cout << m_iNumOfMahoneyGenotypes << '\t' << m_iNumOfMahoneyPositions << '\t' << m_dMahoneyReversionIndex << endl;
 #endif
 #ifdef LONG_REPORT
 	cout << "Absolute number of genotypes in this population: " << m_iNumOfGenotypes << endl;
@@ -443,6 +443,7 @@ int CPopulation::ReportPopulationStatistics()
     	cout << "Estimate of population diversity variance: " << m_dVariance << endl;
 	cout << "Average genotype fitness over population: " << m_dAverageFitness << endl;
 	cout << "Relative health of population: " << m_dPopulationHealth << endl;
+	cout << "Number of replication cycles required to reach current state: " << m_iGenerationNum << endl;
 	cout << "This population is " << (m_bExtinct ? "EXTINCT" : "Viable") << endl;
 	cout << endl;
 	PrintPopulationDistribution();
@@ -757,7 +758,7 @@ void CPopulation::Replicate()
 
 bool CPopulation::ReplicateOnce()
 {
-    UpdatePopulationStatistics();
+	UpdatePopulationStatistics();
     
 	if(m_iNumOfGenotypes >= iBURST_SIZE)
 	{
@@ -770,12 +771,12 @@ bool CPopulation::ReplicateOnce()
 	double dLimitingFactor = (double)(iBURST_SIZE - m_iNumOfGenotypes) / (iBURST_SIZE);
 	int iNumOfNewGenotypes = (int)((double)m_iNumOfGenotypes * dGENERATIONAL_GROWTH * dLimitingFactor);
     
-    // Reduce number of new genotypes so as not to exceed burst size;
-    // ie, do not go beyond remaining resources
-    if(iNumOfNewGenotypes + m_iNumOfGenotypes > iBURST_SIZE)
+	// Reduce number of new genotypes so as not to exceed burst size;
+	// ie, do not go beyond remaining resources
+	if(iNumOfNewGenotypes + m_iNumOfGenotypes > iBURST_SIZE)
         iNumOfNewGenotypes = iBURST_SIZE - m_iNumOfGenotypes;
     
-    // If nothing to replicate, get out of Dodge
+	// If nothing to replicate, get out of Dodge
 	if(iNumOfNewGenotypes == 0)  // Nothing to replicate
 	{
 		cout << "WARNING: nothing to replicate in generation number " << m_iGenerationNum << endl;
@@ -803,12 +804,12 @@ bool CPopulation::ReplicateOnce()
 		CGenotype* pGenotype_a = SelectGenotype(iGenotype_a);
 		CGenotype* pGenotype_b = SelectGenotype(iGenotype_b);
         
-        // Combine the 2 genotypes using copy-choice mechanism
+		// Combine the 2 genotypes using copy-choice mechanism
 		CGenotype* pNewGenotype = CombineGenotypes(pGenotype_a, pGenotype_b); // Creates a new genotype
         
-        pNewGenotype->m_bNewRecombinant = true;
-        pNewGenotype->m_bMutatedReplicate = false;
-        vNewGenotypeSet.push_back(pNewGenotype); // Add this new genotype to holding array
+		pNewGenotype->m_bNewRecombinant = true;
+		pNewGenotype->m_bMutatedReplicate = false;
+		vNewGenotypeSet.push_back(pNewGenotype); // Add this new genotype to holding array
 	}
     
 	// For replicates, it's simpler
@@ -817,23 +818,22 @@ bool CPopulation::ReplicateOnce()
 		int iGenotype = GetRandomNum(0, m_iNumOfGenotypes-1);
 		CGenotype* pNewGenotype = new CGenotype(SelectGenotype(iGenotype),false); // create a new genotype
         
-        pNewGenotype->m_bMutatedReplicate = true;
-        pNewGenotype->m_bNewRecombinant = false;
+		pNewGenotype->m_bMutatedReplicate = true;
+		pNewGenotype->m_bNewRecombinant = false;
         
-        vNewGenotypeSet.push_back(pNewGenotype); // Add to new genotype list
+		vNewGenotypeSet.push_back(pNewGenotype); // Add to new genotype list
 	}
     
 	// Apply random mutation to the new genotypes, then update fitness values (et al)
 	MutateGenotypes(vNewGenotypeSet);
-    for(int i = 0; i < vNewGenotypeSet.size(); i++)
-    {
-        vNewGenotypeSet[i]->UpdateGenotypeStatistics();
-    }
-    
-    int iPotentialProgeny = 0;
-    iPotentialProgeny = vNewGenotypeSet.size();
-    
-    int iNewGenotypeCount = 0;  // Count of how many new genotype are actually added to population
+	for(int i = 0; i < vNewGenotypeSet.size(); i++)
+	{
+		vNewGenotypeSet[i]->UpdateGenotypeStatistics();
+	}
+   
+	int iPotentialProgeny = 0;
+	iPotentialProgeny = vNewGenotypeSet.size();
+	int iNewGenotypeCount = 0;  // Count of how many new genotype are actually added to population
     
 	// Update attributes of new genotypes and move them to m_vGenotypeSet
 	CGenotype* pGenotype;
@@ -843,28 +843,28 @@ bool CPopulation::ReplicateOnce()
 		pGenotype->m_bNewRecombinant = false;
 		pGenotype->m_bMutatedReplicate = false;
         
-        // Calculate how many of this genotype to produce based on fitness
-        // Note:  normally number of progeny = number of replicating genotypes, but code accommodates more progeny
-        // And...Not every genotype can become a parent--survival of the fittest!
-        int iProgenyCount = CalculateNumOfProgeny(pGenotype->m_dFitness_synergy, vNewGenotypeSet);
-        if (iProgenyCount > 0)
-        {
-            pGenotype->m_iGenotypeCount = iProgenyCount;
-            m_vGenotypeSet.push_back(pGenotype); // A bouncing baby genotype is born!
-            iNewGenotypeCount += iProgenyCount;  // Update the "census"
-        }
-        else
-        {
-            delete pGenotype;
-        }
-    }
+	        // Calculate how many of this genotype to produce based on fitness
+	        // Note:  normally number of progeny = number of replicating genotypes, but code accommodates more progeny
+	        // And...Not every genotype can become a parent--survival of the fittest!
+	        int iProgenyCount = CalculateNumOfProgeny(pGenotype->m_dFitness_synergy, vNewGenotypeSet);
+		if (iProgenyCount > 0)
+		{
+			pGenotype->m_iGenotypeCount = iProgenyCount;
+			m_vGenotypeSet.push_back(pGenotype); // A bouncing baby genotype is born!
+			iNewGenotypeCount += iProgenyCount;  // Update the "census"
+		}
+		else
+		{
+			delete pGenotype;
+		}
+	}
 	vNewGenotypeSet.clear();  // Clean up
     
 	// Total genotype count is increased by no. of newly replicated ones.	
-    m_iNumOfGenotypes += iNewGenotypeCount;
+	m_iNumOfGenotypes += iNewGenotypeCount;
 
-    UpdatePopulationStatistics();
+	UpdatePopulationStatistics();
     
-    return true;
+	return true;
 }
 

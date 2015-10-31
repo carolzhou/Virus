@@ -18,7 +18,15 @@
 
 #include "Configurable.h"
 
-////////////////////////////////////////////////////////////////////////////////////
+/*enum EFitness 
+{
+	ePosition,
+	eA,
+	eC,
+	eG,
+	eU
+};
+*/
 // Fitness-1 values.
 // Fitness values may be assigned based on experimental data.
 // 0.0 indicates a lethal mutation; 1.0 is highly selected.
@@ -30,7 +38,6 @@
 //   be indicated by 0.0--none set for this fitness grid.
 // Initially setting Mahoney to 0.8, neurovirulence to 1.0
 //   default to 0.5, Sabin1 to 0.2 (assume poorly selected)
-// THIS FITNESS GRID HAS NO LETHAL MUTATIONS
 struct SFitness Fitness1Positions[] =
 {
 	{21,   0.5, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1 
@@ -95,69 +102,67 @@ struct SFitness Fitness1Positions[] =
 // This fitness grid is for testing, currently incorporated lethal mutations
 // Lethal mutations are indicated with fitness value of 0.0
 // Using this fitness grid should drive the cloud toward error catastrophe
-// THIS FITNESS GRID HAS LETHAL MUTATIONS AT 27 POSITIONS
 struct SFitness Fitness2Positions[] =
 {
-        {21,   0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {189,  0.0, 1.0, 0.5, 0.2}, // C - neurovirulence, Mahoney; U - Sabin1
-        {480,  1.0, 0.5, 0.9, 0.5}, // A - neurovirulence, Mahoney; G - Sabin1
-        {525,  0.5, 1.0, 0.5, 0.5}, // C - neurovirulence if 480=G; N - Mahoney, Sabin1 (does not distinguish) // Avoid making this position lethal
-        {649,  0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {674,  0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {935,  0.0, 0.5, 1.0, 0.2}, // G - neurovirulence, Mahoney; U - Sabin1
-        {1208, 0.8, 0.2, 0.0, 0.5}, // A - Mahoney; C - Sabin1
-        {1228, 0.0, 0.2, 0.8, 0.5}, // G - Mahoney; C - Sabin1
-        {1442, 0.8, 0.0, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {1465, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {1490, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {1507, 0.2, 0.0, 0.8, 0.5}, // G - Mahoney; A - Sabin1
-        {1747, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {1885, 0.8, 0.0, 0.5, 0.2}, // A - Mahoney; U - Sabin1
-        {1942, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {1944, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {2353, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {2438, 0.2, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
-        {2545, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {2585, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {2741, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {2749, 0.2, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
-        {2762, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {2775, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {2795, 0.2, 0.5, 1.0, 0.5}, // G - neurovirulence, Mahoney; A - Sabin1
-        {2879, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {3163, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {3445, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {3460, 0.2, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
-        {3492, 0.2, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
-        {3766, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {3785, 0.2, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
-        {3896, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {3898, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {3919, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {4003, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {4116, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {4444, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {4789, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {5107, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {5137, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {5420, 0.2, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
-        {5440, 0.8, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
-        {6140, 0.2, 0.8, 1.0, 0.5}, // C - neurovirulence; A - Sabin1
-        {6143, 0.2, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
-        {6203, 0.0, 0.2, 0.5, 1.0}, // U - neurovirulence, Mahoney; C - Sabin1
-        {6373, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {6616, 0.2, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
-        {6679, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {6853, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {7071, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
-        {7198, 0.2, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
-        {7243, 0.2, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
-        {7410, 0.5, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
-        {7441, 0.8, 0.5, 0.2, 0.5}  // A - Mahoney; G - Sabin1
+	{21,   0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1 
+	{189,  0.0, 1.0, 0.5, 0.2}, // C - neurovirulence, Mahoney; U - Sabin1
+	{480,  0.0, 0.5, 0.9, 0.5}, // A - neurovirulence, Mahoney; G - Sabin1
+	{525,  0.0, 1.0, 0.5, 0.5}, // C - neurovirulence if 480=G; N - Mahoney, Sabin1 (does not distinguish)
+	{649,  0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{674,  0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{935,  0.0, 0.5, 1.0, 0.2}, // G - neurovirulence, Mahoney; U - Sabin1
+	{1208, 0.0, 0.2, 0.5, 0.5}, // A - Mahoney; C - Sabin1
+	{1228, 0.0, 0.2, 0.8, 0.5}, // G - Mahoney; C - Sabin1
+	{1442, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{1465, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{1490, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{1507, 0.0, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
+	{1747, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{1885, 0.0, 0.5, 0.5, 0.2}, // A - Mahoney; U - Sabin1
+	{1942, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{1944, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{2353, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{2438, 0.0, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
+	{2545, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{2585, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{2741, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{2749, 0.0, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
+	{2762, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{2775, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{2795, 0.0, 0.5, 1.0, 0.5}, // G - neurovirulence, Mahoney; A - Sabin1
+	{2879, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{3163, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{3445, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{3460, 0.0, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
+	{3492, 0.0, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
+	{3766, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{3785, 0.0, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
+	{3896, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{3898, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{3919, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{4003, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{4116, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{4444, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{4789, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{5107, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{5137, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{5420, 0.0, 0.8, 0.5, 0.5}, // C - Mahoney; A - Sabin1
+	{5440, 0.0, 0.5, 0.2, 0.5}, // A - Mahoney; G - Sabin1
+	{6140, 0.0, 0.8, 1.0, 0.5}, // C - neurovirulence; A - Sabin1
+	{6143, 0.0, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
+	{6203, 0.0, 0.2, 0.5, 1.0}, // U - neurovirulence, Mahoney; C - Sabin1
+	{6373, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{6616, 0.0, 0.5, 0.8, 0.5}, // G - Mahoney; A - Sabin1
+	{6679, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{6853, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{7071, 0.0, 0.8, 0.5, 0.2}, // C - Mahoney; U - Sabin1
+	{7198, 0.0, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
+	{7243, 0.0, 0.5, 0.5, 0.8}, // U - Mahoney; A - Sabin1
+	{7410, 0.0, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1
+	{7441, 0.0, 0.0, 0.2, 0.0}  // A - Mahoney; G - Sabin1
 };
 #define NUM_FITNESS2_POSITIONS (sizeof(Fitness2Positions) / sizeof(struct SFitness))
 
-// THIS FITNESS GRID HAS LETHAL MUTATIONS AT 4 POSITIONS
 struct SFitness Fitness3Positions[] =
 {
 	{21,   0.5, 0.2, 0.5, 0.8}, // U - Mahoney; C - Sabin1 

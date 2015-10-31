@@ -18,6 +18,8 @@
 
 using namespace std;
 
+extern bool bFILTER_DEFECTIVES;
+
 static TRandomMersenne oRandomNumGenerator(10);
 static unsigned long iRandomNumGen = 0;
 static int GetRandomNum(int start, int end);
@@ -36,6 +38,7 @@ CCloud::CCloud()
 	m_bNeurovirulent          = false;
 	m_bMahoney                = false;
 	m_iCensus                 = 0;
+	m_bExtinct                = false;
 }
 
 CCloud::~CCloud()
@@ -61,15 +64,21 @@ void CCloud::AddPopulation(CPopulation* pPopulation)
 	m_vPopulationSet.push_back(pPopulation);
 }
 
-void CCloud::Grow()
+bool CCloud::Grow()
 {
+	bool bExtinct = true;  // Disprove if even 1 population remains viable 
 	for(unsigned int i = 0; i < m_vPopulationSet.size(); i++)
 	{
 		if(m_vPopulationSet[i]->IsExtinct())
 			cout << "Current Population is extinct: cannot Replicate()" << endl;
 		else	
+		{
+			bExtinct = false;  // At least one population is viable
 			m_vPopulationSet[i]->Replicate();
+		}
 	}
+	m_bExtinct = bExtinct;
+	return bExtinct;
 }
 
 void CCloud::Burst()
@@ -84,6 +93,7 @@ void CCloud::Burst()
 				m_vPopulationSet[i]->m_vGenotypeSet.begin(), 
 				m_vPopulationSet[i]->m_vGenotypeSet.end());
 		m_pSuperPopulation->m_iNumOfGenotypes += m_vPopulationSet[i]->m_iNumOfGenotypes;
+		m_pSuperPopulation->m_iGenerationNum  += m_vPopulationSet[i]->m_iGenerationNum;
 		
 		// Clear the old population after being merged into the m_pSuperPopulation
 		m_vPopulationSet[i]->m_bBurstSizeReached = false;
@@ -105,7 +115,9 @@ void CCloud::Burst()
 
 CPopulation* CCloud::PickInoculum(int iInoculumSize) 
 // Randomly select a sampling of virus particles (genotypes) from the superpopulation
-{												
+{				
+	unsigned int iAdjustedInoculumSize = iInoculumSize;
+						
 	if(!m_pSuperPopulation)
 		return NULL;
 
@@ -118,11 +130,18 @@ CPopulation* CCloud::PickInoculum(int iInoculumSize)
 		cout << "Current Superpopulation is extinct: cannot PickInoculum()" << endl;
 		return NULL;
 	}
+
+	// Check if there are enough genotypes to form an inoculum
+	if(m_pSuperPopulation->m_iNumOfGenotypes < iInoculumSize)
+	{
+		cout << "Current Superpopulation census is too small: using all genotypes for inoculum" << endl;
+		iAdjustedInoculumSize = m_pSuperPopulation->m_iNumOfGenotypes; // Take everything
+	}
 	
 	vector<CGenotype*> SelectedGenotypeSet;
 
 	// Eliminate redundant genotype objects in inoculum 
-	for(int i = 0; i < iInoculumSize; i++)
+	for(int i = 0; i < iAdjustedInoculumSize; i++)
 	{
 		int iGenotype;
 		CGenotype* pGenotype;
@@ -163,10 +182,17 @@ CPopulation* CCloud::PickInoculum(int iInoculumSize)
 	for (unsigned int k = 0; k < SelectedGenotypeSet.size(); k++)
 	{
 		CGenotype * pGenotype = SelectedGenotypeSet[k];
-		CGenotype * pNewGenotype = new CGenotype(pGenotype);
-		pNewGenotype->m_iGenotypeCount = pGenotype->m_iSelectionCount;
-		pGenotype->m_iSelectionCount = 0; // reset for next time inoculum is created (next passage)
-		pNewInoculum->AddGenotype(pNewGenotype);
+		if(pGenotype->IsLethal() && bFILTER_DEFECTIVES)
+		{
+			cout << "Removing a defective interfering particle from inoculum set" << endl;
+		}
+		else
+		{
+			CGenotype * pNewGenotype = new CGenotype(pGenotype);
+			pNewGenotype->m_iGenotypeCount = pGenotype->m_iSelectionCount;
+			pGenotype->m_iSelectionCount = 0; // reset for next time inoculum is created (next passage)
+			pNewInoculum->AddGenotype(pNewGenotype);
+		}
 	}
 		
 	SelectedGenotypeSet.clear();

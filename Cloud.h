@@ -24,7 +24,7 @@ public:
 
 	// methods	
 	void AddPopulation(CPopulation* pPopulation);
-	void Grow();                  // Proceed with replication
+	bool Grow();                  // Proceed with replication; if returns false => no viable population
 	void Burst();                 // Deconstruct populations, consolidate to super-population
 	CPopulation* PickInoculum(int iInoculumSize);  // Randomly select a small set of genotypes from super-pop
 	void PrintCloud();            // Enumerates the Population in detail (for development/debugging/logging)
@@ -37,6 +37,7 @@ public:
 	bool                 m_bInfectionCyclesReached;  // true when num cell infection cycles has been reached (may be 1)
 	bool                 m_bNeurovirulent;           // true if any genotype is neurovirulent
 	bool                 m_bMahoney;                 // true if any genotype has reverted to Mahoney 
+	bool                 m_bExtinct;                 // true if all populations have crashed
 	unsigned long        m_iCensus;                  // number of genotypes in Cloud
 };
 

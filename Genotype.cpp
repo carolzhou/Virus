@@ -338,7 +338,7 @@ bool CGenotype::IsMahoney()
 {
 	int iMahoneyCount = 0;  // Number of positions that have reverted to Mahoney
 	bool bMahoney = false;  // Assume false to start
-    int iMahoneyPercent = 0; // What percentage of positions are Mahoney
+        int iMahoneyPercent = 0; // What percentage of positions are Mahoney
 	std::vector<CPosition*>::iterator it;
 	CPosition* nextPosition = NULL;
 
@@ -354,8 +354,8 @@ bool CGenotype::IsMahoney()
 		else
 			nextPosition->m_bMahoney = false;
 	}
-    iMahoneyPercent = (int)((100 * iMahoneyCount) / iNUMBER_MAHONEY_POSITIONS);
-	if(iMahoneyCount >= iMAHONEY_THRESHOLD) //
+	iMahoneyPercent = (int)(((double)(100 * iMahoneyCount) / (double)iNUMBER_MAHONEY_POSITIONS) + 0.5); // Round to nearest integer
+	if(iMahoneyPercent >= iMAHONEY_THRESHOLD) //
 		bMahoney = true;
 
 	m_bMahoney = bMahoney;  // Update at genotype level

@@ -97,8 +97,8 @@ public:
 	void MutateGenotypes(vector<CGenotype*> &vGenotypeSet); // Performs genotype mutation
 	CGenotype* CombineGenotypes(CGenotype* pGenotype_a, CGenotype* pGenotype_b); // Performs copy-choice replication
 	CGenotype* SelectGenotype(int iRandomPosition);
-    double CalculateAverageFitness(vector<CGenotype*> &vGenotypeSet); // Calculate the average fitness over a genotype set
-    int CalculateNumOfProgeny(double dFitness, vector<CGenotype*> &vGenotypeSet);  // Calculate number of progeny for a genoytpe
+	double CalculateAverageFitness(vector<CGenotype*> &vGenotypeSet); // Calculate the average fitness over a genotype set
+	int CalculateNumOfProgeny(double dFitness, vector<CGenotype*> &vGenotypeSet);  // Calculate number of progeny for a genoytpe
 
 	// data members
 	vector<CGenotype*> m_vGenotypeSet;
