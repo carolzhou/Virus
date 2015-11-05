@@ -86,7 +86,7 @@ public:
 	double CalculatePopulationFitness(); // Returns average of fitness values across genotypes
 	void UpdatePopulationStatistics(); // Provide summary statistics regarding Sabin, Mahoney, Neurovirulence	
 	int ReportPopulationStatistics(); // Report summary of statistics gathered in UpdatePopulationStatistics()
-	void PrintPopulationDistribution(); // Display population distribution as a sorted list of numbers
+	void CalculatePopulationDistribution(); // Compute population statistics given distribution as a sorted list of numbers
 	void Consolidate();
 	bool ReplicateOnce();
 	void Replicate();                  // Constructs a Pool object and invokes replication cycle
@@ -118,6 +118,10 @@ public:
 	bool               m_bExtinct;                 // True if no viable genotypes remain
 	double             m_dPopulationHealth;        // Proportion of viable genotypes to total genotypes
 	double             m_dVariance;                // Statistical measure of population diversity, assuming normal distribution
+	unsigned int       m_iPopulationMinimum;       // A diversity statistic
+	unsigned int       m_iPopulationMaximum;       // A diversity statistic
+	double             m_dPopulationMean;          // A diversity statistic
+	double             m_dPopulationMedian;        // A diversity statistic
 };
 
 

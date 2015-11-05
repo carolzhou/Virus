@@ -65,7 +65,11 @@ CPopulation::CPopulation()
 	m_bNeurovirulent = false;
 	m_bExtinct = false; // CHECK: true initially, actually, for an emptly population ;-)
 	m_dPopulationHealth = 100.0; // Assume all viable genotypes to start
-	m_dVariance = 0.0; 
+	m_dVariance          = 0.0; // Population diversity statistic
+	m_iPopulationMinimum = 0; // Population diversity statistic
+	m_iPopulationMaximum = 0;
+	m_dPopulationMean    = 0.0;
+	m_dPopulationMedian  = 0.0;
 }
 
 CPopulation::~CPopulation()
@@ -109,7 +113,6 @@ void CPopulation::PrintPopulation()
 	}
 #ifdef PRINT_POPULATION_IN_DETAIL
 	ReportPopulationStatistics();
-	PrintPopulationDistribution();
 #endif
 }
 
@@ -396,7 +399,8 @@ int CPopulation::ReportPopulationStatistics()
 	unsigned int iDistinctCount = 0;
 
 	UpdatePopulationStatistics(); // *** May not be necessary, and may slow execution, but better safe than sorry
-
+	CalculatePopulationDistribution();
+	
 	// Calculate diversity  // *** CHECK devise better method
 	// Calculates the ratio of distinct to total genotypes
 	if(m_iNumOfNeurovirulentGenotypes)
@@ -410,6 +414,7 @@ int CPopulation::ReportPopulationStatistics()
 
 #ifdef BRIEF_REPORT
 	cout << "P-genomes,distinct,diversity,health: " << m_iNumOfGenotypes << ' ' << iDistinctCount << ' ' << dDiversity << ' ' << m_dPopulationHealth << '%' << endl;
+	cout << "P-statistics: min,max,mean,median: " << m_iPopulationMinimum << ' ' << m_iPopulationMaximum << ' ' << m_dPopulationMean << ' ' << m_dPopulationMedian << endl;
 	cout << "P-defective,fitness,viability: " << m_iNumOfDefectiveGenotypes << ' ' << m_dAverageFitness << ' ' << (m_bExtinct ? "EXTINCT" : "Viable") << ' ' << m_iGenerationNum << endl;  
 	cout << "N-genomes,neurovirIndex,aveNeurovir: " << m_iNumOfNeurovirulentGenotypes << ' ' << m_iNeurovirulentIndex << ' ' << dAveNeurovirulentIndex << endl;
 	cout << "M-genomes,positions,reversion: " << m_iNumOfMahoneyGenotypes << ' ' << m_iNumOfMahoneyPositions << ' ' << m_dMahoneyReversionIndex << endl;
@@ -420,10 +425,13 @@ int CPopulation::ReportPopulationStatistics()
 	++static_iReportNo;
 	if(static_iReportNo == 1)
 	{
-		cout << "Report No." << "\tPgtps\tDstnct\tDivers\tHealth\tDefect\tAveFit\tViabl\tGens\tNgtps\tNVind\tAvNVind\tMgtps\tMuts\tRvsn" << endl;
+		cout << "Report No." << "\tPgentps\tDstinct\tDivrsty\tPMinMax\tPopMean\tPopMedn\t";
+		cout << "Health\tDefctvs\tAveFitn\tViablty\tGnratns\tNgentps\tNscore\tAvNindx\tMgentyps\tMutns\tRevrsn" << endl;
 	}
-	cout << "Report " << static_iReportNo << "\t" << m_iNumOfGenotypes << '\t' << iDistinctCount << '\t' << dDiversity << '\t' << m_dPopulationHealth << "%\t";
-	cout << m_iNumOfDefectiveGenotypes << '\t' << m_dAverageFitness << '\t' << (m_bExtinct ? "E" : "V") << '\t' << m_iGenerationNum << '\t';
+	cout << "Report " << static_iReportNo << "\t" << m_iNumOfGenotypes << '\t' << iDistinctCount << '\t' << dDiversity << '\t';
+	cout << m_iPopulationMinimum << '-' << m_iPopulationMaximum << '\t' << m_dPopulationMean << '\t' << m_dPopulationMedian << '\t';
+	cout << m_dPopulationHealth << '\t' << m_iNumOfDefectiveGenotypes << '\t' << m_dAverageFitness << '\t';
+	cout << (m_bExtinct ? "Extinct" : "Viable") << '\t' << m_iGenerationNum << '\t';
 	cout << m_iNumOfNeurovirulentGenotypes << '\t' << m_iNeurovirulentIndex << '\t' << dAveNeurovirulentIndex << '\t';
 	cout << m_iNumOfMahoneyGenotypes << '\t' << m_iNumOfMahoneyPositions << '\t' << m_dMahoneyReversionIndex << endl;
 #endif
@@ -441,22 +449,22 @@ int CPopulation::ReportPopulationStatistics()
 	cout << "Number of defective genotypes: " << m_iNumOfDefectiveGenotypes << endl;
     	cout << "Estimate of population diversity simple: " << dDiversity << endl;
     	cout << "Estimate of population diversity variance: " << m_dVariance << endl;
+	cout << "Population min and max: " << m_iPopulationMinimum << ", " << m_iPopulationMaximum << endl;
+	cout << "Population mean and median: " << m_dPopulationMean << ", " << m_dPopulationMedian << endl;
 	cout << "Average genotype fitness over population: " << m_dAverageFitness << endl;
 	cout << "Relative health of population: " << m_dPopulationHealth << endl;
 	cout << "Number of replication cycles required to reach current state: " << m_iGenerationNum << endl;
 	cout << "This population is " << (m_bExtinct ? "EXTINCT" : "Viable") << endl;
 	cout << endl;
-	PrintPopulationDistribution();
 #endif
 	return(0);
 }
 
-void CPopulation::PrintPopulationDistribution()
+void CPopulation::CalculatePopulationDistribution()
 {
 	vector<int> identicals;
 	double dMean = 0.0;
-	unsigned int iMedian = 0;
-	unsigned int iMidPoint = 0;
+	double dMedian = 0.0;
 	unsigned int iMin = iBURST_SIZE; // 
 	unsigned int iMax = 0;
 
@@ -476,8 +484,18 @@ void CPopulation::PrintPopulationDistribution()
 	}
 	
 	// Calculate mid point of identicals list and get median value // *** CHECK this
-	iMidPoint = (int)(((double)identicals.size() / 2.0) + 0.5);
-	iMedian = identicals[iMidPoint];
+	if(identicals.size() % 2 == 0)  // Even number of numbers; median is average of middle two
+	{
+		unsigned int left  = (identicals.size() / 2);
+		unsigned int right = (identicals.size() / 2) + 1;
+		dMedian = ((double)identicals[left] + (double)identicals[right]) / 2.0;
+	}
+	else // Odd number of values => take middle value
+	{
+		//unsigned int iMidPoint = (int)(((double)identicals.size() / 2.0) + 0.5);
+		unsigned int iMidPoint = identicals.size() / 2;
+		dMedian = identicals[iMidPoint];
+	}
 
 	// Print raw distribution
 	cout << "Pop distribution: ";
@@ -496,7 +514,12 @@ void CPopulation::PrintPopulationDistribution()
 	cout << endl;
 	
 	// Calculate and print basic distribution statistics  
-	cout << "Distribution stats (genotype copy min, max, mean, and median):\t" << iMin << '\t' << iMax << '\t' << dMean << '\t' << iMedian << endl;
+	m_iPopulationMinimum = iMin;
+	m_iPopulationMaximum = iMax;
+	m_dPopulationMean    = dMean;
+	m_dPopulationMedian  = dMedian;
+
+	//cout << "Distribution stats (genotype copy min, max, mean, and median):\t" << iMin << '\t' << iMax << '\t' << dMean << '\t' << dMedian << endl;
 }
 
 void CPopulation::Consolidate(void) // Remove redundancy in genotype list; collapse equivalents

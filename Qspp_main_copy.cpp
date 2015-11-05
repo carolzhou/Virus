@@ -78,8 +78,7 @@ double        dFITNESS_ACCELERATOR           = FITNESS_ACCELERATOR;
 int           iMAHONEY_THRESHOLD             = MAHONEY_THRESHOLD;
 bool          bRETAIN_LETHALS                = RETAIN_LETHALS;
 double        dMAHONEY_SYNERGY               = MAHONEY_SYNERGY;
-int           iPURGE_PERCENT                 = PURGE_PERCENT; // CHECK: not sure this is useful
-bool          bFILTER_DEFECTIVES             = FILTER_DEFECTIVES; 
+int           iPURGE_PERCENT                 = PURGE_PERCENT;
 
 // Not yet in service
 unsigned long iGENERATION_DEPTH              = GENERATION_DEPTH;
@@ -147,7 +146,6 @@ void Simulate(void)
 	// Passage 0 is the initial plate 
 	for(unsigned int i = 0; i <= iNUMBER_OF_PASSAGES; i++)
 	{
-		bool bExtinct = false; // Cloud goes extinct (virus non-viable) if all pops crash
 		if(i != 0) // Skip first time through
 		{
 			// Re-inoculation:
@@ -167,27 +165,12 @@ void Simulate(void)
 		//pCurCloud->PrintCloud();
 
 		cout << "Growing..." << endl;
-		bExtinct = pCurCloud->Grow();
-		if(!bExtinct)
-		{
-			cout << "Bursting..." << endl;
-			pCurCloud->Burst();
-		}
-		else
-		{
-			cout << "Virus is EXTINCT: all populations have crashed!" << endl;
-		}
+		pCurCloud->Grow();
+		cout << "Bursting..." << endl;
+		pCurCloud->Burst();
 
 		cout << endl << "Passage " << i << " Final cloud" << endl;
-		if(!bExtinct)
-		{
-			pCurCloud->PrintCloud();
-		}
-		else
-		{
-			cout << "Virus has reached ERROR CATASTROPHE!" << endl;
-			break;
-		}
+		pCurCloud->PrintCloud();
 		cout << endl << "Conclusion of Passage " << i << " Data" << endl;
 	}
 	delete pCurCloud;
@@ -223,18 +206,13 @@ int main(int argc, char* argv[])
 			dFITNESS_ACCELERATOR = ((double)atof(argv[i+1]));
         	else if(!strcmp(argv[i],"-t"))
         	        iMAHONEY_THRESHOLD = ((int)atoi(argv[i+1]));
-        	else if(!strcmp(argv[i],"-s"))
-        	        dMAHONEY_SYNERGY = ((double)atof(argv[i+1]));
         	else if(!strcmp(argv[i],"-l"))
 		{
 			if(!strcmp(argv[i+1],"n") || !strcmp(argv[i+1],"no") || !strcmp(argv[i+1],"false") || !strcmp(argv[i+1],0))
 				bRETAIN_LETHALS = false; // Default is true
 		}
-		else if(!strcmp(argv[i],"-f"))
-		{
-			if(!strcmp(argv[i+1],"n") || !strcmp(argv[i+1],"no") || !strcmp(argv[i+1],"false") || !strcmp(argv[i+1],0))
-				bFILTER_DEFECTIVES = false;  // Default is true
-		}
+        	else if(!strcmp(argv[i],"-s"))
+        	        dMAHONEY_SYNERGY = ((double)atof(argv[i+1]));
 		//else if(!strcmp(argv[i],"-z")) // Note: not yet fully implemented
 		//	iPURGE_PERCENT = ((int)atoi(argv[i+1]));
 	}
@@ -248,9 +226,7 @@ int main(int argc, char* argv[])
 	cout << "Number of populations = " << iNUMBER_OF_POPULATIONS << endl;
     	cout << "Fitness accelerator = " << dFITNESS_ACCELERATOR << endl;
     	cout << "Mahoney threshold (%) = " << iMAHONEY_THRESHOLD << endl;
-	cout << "Mahoney synergy factor is " << dMAHONEY_SYNERGY << endl;
     	cout << "Retain lethals is " << (bRETAIN_LETHALS ? "true" : "false") << endl;
-	cout << "Filter defectives is " << (bFILTER_DEFECTIVES ? "true" : "false") << endl;
 
 	cout << endl << "Creating initial genotypes..." << endl;
 	
@@ -266,8 +242,8 @@ int main(int argc, char* argv[])
 	pSabin         = new CGenotype(Sabin1Positions, NUM_SABIN1_POSITIONS);
     
 	// Creating Fitness based on Mahoney and Neurovirulence
-	pFitness = new CFitness(Fitness1Positions, NUM_FITNESS1_POSITIONS); // no lethal mutations possible
-	//pFitness = new CFitness(Fitness2Positions, NUM_FITNESS2_POSITIONS); // 27 lethal mutations possible
+	//pFitness = new CFitness(Fitness1Positions, NUM_FITNESS1_POSITIONS); // no lethal mutations possible
+	pFitness = new CFitness(Fitness2Positions, NUM_FITNESS2_POSITIONS); // 10 lethal mutations possible
 	//pFitness = new CFitness(Fitness3Positions, NUM_FITNESS3_POSITIONS); // 4 lethal mutations possible
 	
 	// Print starting data for this simulation
